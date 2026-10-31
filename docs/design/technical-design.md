@@ -20,7 +20,7 @@
 ┌───────────────┴──────── view/ ────┴─────────────────┐   cc components, render model, forward input
 │ BoardView  BoardTiles  PieceNode  DragController     │
 └───────────────▲───────────────────▲─────────────────┘
-                │ events            │ tryMove(pieceId,r,c)
+                │ events            │ beginDrag / dragStep / endDrag
 ┌───────────────┴────── systems/ ───┴─────────────────┐   engine-free orchestration
 │ GameSession (state machine)   EventBus   SaveStore   │
 └───────────────▲─────────────────────────────────────┘
@@ -85,11 +85,11 @@ The L mapping is confirmed visually when `PieceNode` is implemented (one texture
 ## 4. GameSession state machine (systems/GameSession.js)
 
 ```
-          load(level)              touch on movable piece
- ┌──────┐ ─────────▶ ┌──────┐ ──────────────────────────▶ ┌──────────┐
- │LOADED│            │ IDLE │ ◀────────────────────────── │ DRAGGING │
- └──────┘            └──┬───┘   drop rejected / no match  └────┬─────┘
-                        ▲                                      │ drop accepted → tryMove
+          load(level)              beginDrag(pieceId)            dragStep(pieceId, r, c) ⟲
+ ┌──────┐ ─────────▶ ┌──────┐ ──────────────────────────▶ ┌──────────┐  one cell per step,
+ │LOADED│            │ IDLE │ ◀────────────────────────── │ DRAGGING │  board updated each time
+ └──────┘            └──┬───┘   endDrag → no complete chain └────┬─────┘
+                        ▲                                      │ endDrag → resolve()
                         │ animations done, words remain        ▼
                         │                                 ┌───────────┐
                         └──────────────────────────────── │ RESOLVING │
@@ -100,8 +100,10 @@ The L mapping is confirmed visually when `PieceNode` is implemented (one texture
                                                           │ COMPLETE │
                                                           └──────────┘
 ```
-- `tryMove(pieceId, row, col)` → `{ ok, reason }`. Rejects when state ≠ IDLE/DRAGGING, piece pinned/frozen, or `!board.canPlace`.
-- On accepted move: emit `piece:moved`, enter RESOLVING, run `resolve()`.
+- `beginDrag(pieceId)` → `{ ok, reason }`. Rejects when state ≠ IDLE or the piece is pinned/frozen. Enters DRAGGING, emits `drag:started`.
+- `dragStep(pieceId, row, col)` → `{ ok, reason }`. Rejects unless the piece is the dragged one, the target is 4-adjacent to its anchor (`|dr| + |dc| === 1`), and `board.canPlace(piece, row, col)`. On success `board.place` runs immediately (so no other piece can ever share a cell), `piece:moved {pieceId, from, to}` is emitted and the state stays DRAGGING. Pieces never move more than one cell per call; the view decomposes longer moves into steps.
+- `endDrag(pieceId)` → enters RESOLVING, emits `drag:ended`, runs `resolve()`. Movement was already committed step by step, so there is no reject path at release.
+- `findPath(pieceId, row, col)` (helper, pure) → shortest list of single-cell steps from the piece's anchor to the target through cells where the whole footprint is free, breadth-first over the board; `null` if unreachable. Used by the view to route a piece toward a finger that is several cells away; also the primitive the solver uses.
 - `resolve()` loop:
   1. `results = WordMatcher.find(board, level, pieces)`; `matches = results.filter(complete)`; if none, emit `word:progress` with every incomplete prefix (cells and word index) so the view can tint letters, then stop.
   2. For each match (word order), skip if any piece already removed; remove its pieces, mark word found, `coins += COINS_PER_WORD`, emit `word:cleared`.
@@ -165,19 +167,30 @@ PieceNode (size = bbox of cells)         zIndex 0, raised to 100 while dragging
 ├── badge   cc.Label (word length, pinned only, bottom-right of the cell)
 └── ice     cc.Sprite (frozen texture for shapeKey) + counter cc.Label; destroyed on thaw
 ```
-`setModel(piece)` re-renders from the piece; `setHighlight(wordIndex|null)` tints a free letter that continues a word from its pin; `playThaw()`, `playClear(targetWorldPos)`, `snapTo(localPos)`, `returnTo(localPos)`.
+`setModel(piece)` re-renders from the piece; `setHighlight(wordIndex|null)` tints a free letter that continues a word from its pin; `playThaw()`, `playClear(targetWorldPos)`, `slideTo(localPos, cb)` (one cell), `playBlocked()` (small bump).
 
-### 6.4 DragController (component on the board node)
+### 6.4 DragController (component on the board node) — grid-constrained sliding
+The piece never floats under the finger. It stays on cell centres and slides one cell at a time toward the finger through free cells, exactly as the demo videos show (E steps [1,2] → [1,1] → [0,1] lagging behind the cursor).
 ```
-TOUCH_START  pick topmost PieceNode under finger (hit test on node bbox); reject if pinned/frozen or session not IDLE
-             remember origin cell; lift (scale 1.08, zIndex 100); offset = finger - node position
-TOUCH_MOVE   node.position = boardLocal(finger) - offset        (piece may visually leave the board)
-TOUCH_END /  anchorLocal = node.position + anchorOffset          (anchor sub-cell centre)
-TOUCH_CANCEL cell = localToCell(anchorLocal)
-             ok = cell && session.tryMove(id, cell.r, cell.c).ok
-             ok ? snapTo(cellToLocal(cell)) : returnTo(cellToLocal(origin)); unlift
+TOUCH_START  pick topmost PieceNode under finger; session.beginDrag(id) must return ok (else ignore)
+             grabOffset = finger - anchorCellCentre; lift (scale 1.08, zIndex 100); queue = []
+TOUCH_MOVE   target = localToCell(finger - grabOffset); if null or target == current anchor → return
+             if queue is non-empty → replace the queue tail with a new route from the last queued cell
+             path = session.findPath(id, target.r, target.c)         # BFS over free footprints
+             if path is null → path = session.findPath toward the closest reachable cell to target (by Manhattan distance)
+             queue = path; if not already stepping → stepNext()
+stepNext()   step = queue.shift(); if !step → return
+             ok = session.dragStep(id, step.r, step.c).ok            # commits the board immediately
+             ok ? tween node to cellToLocal(step) over Timing.SLIDE_STEP then stepNext()
+                : queue = []; play blocked bump
+TOUCH_END /  endPending = true; when queue is empty and no tween is running:
+TOUCH_CANCEL session.endDrag(id); unlift
 ```
-Single active touch id; a second finger is ignored. All tweens through `cc.tween`, durations in `data/Timing.js`.
+- Single active touch id; a second finger is ignored.
+- `Timing.SLIDE_STEP ≈ 0.06 s` per cell so a three-cell slide takes under 0.2 s and still reads as motion.
+- Because every step commits to the board, two pieces can never overlap and no piece can pass through another, even if the finger crosses them.
+- BFS is over at most 8x8 cells per TOUCH_MOVE; cache the last target to avoid recomputing on every pixel.
+- A step refused by the session (race with a thaw or a resize) empties the queue and bumps the piece; it stays where it legally is.
 
 ## 7. UI design (ui/)
 
@@ -191,8 +204,9 @@ Single active touch id; a second finger is ignored. All tweens through `cc.tween
 | event | payload | consumers |
 |---|---|---|
 | `level:loaded` | `{ level }` | Game, Hud, BoardView |
-| `piece:moved` | `{ pieceId, from, to }` | BoardView (snap) |
-| `piece:rejected` | `{ pieceId, reason }` | BoardView (return), Hud (optional shake) |
+| `piece:moved` | `{ pieceId, from, to }` | BoardView (tween one cell) |
+| `drag:started` / `drag:ended` | `{ pieceId }` | BoardView (lift / unlift) |
+| `piece:rejected` | `{ pieceId, reason }` | BoardView (bump feedback when a step is blocked) |
 | `word:progress` | `{ prefixes: [{ wordIndex, pieceIds }] }` | BoardView tints prefix letters in the word colour, resets the rest |
 | `word:cleared` | `{ wordIndex, word, cells, pieceIds }` | BoardView (clear anim), FoundWordsPanel, Hud (coins) |
 | `freeze:tick` | `{ pieceId, remaining }` | PieceNode counter |
@@ -203,8 +217,9 @@ Single active touch id; a second finger is ignored. All tweens through `cc.tween
 | moment | effect | duration / easing |
 |---|---|---|
 | lift | scale 1→1.08, zIndex 100 | 0.08 s quadOut |
-| snap | position to cell, scale →1 | 0.12 s quadOut |
-| return | position to origin, scale →1 | 0.2 s quadInOut |
+| slide step | position to the next cell centre | 0.06 s linear per cell |
+| blocked bump | 4 px nudge toward the finger and back | 0.1 s |
+| settle | scale →1, zIndex 0 | 0.1 s quadOut |
 | prefix tint | letter tint to word colour (or back to white) | 0.1 s |
 | word clear | all chain letters tinted, hold, then fly to the panel one letter at a time in word order | 0.25 s hold + 0.3 s per letter, 0.08 s stagger |
 | ice tick | counter punch scale 1.3→1 | 0.15 s backOut |
@@ -219,25 +234,28 @@ Single active touch id; a second finger is ignored. All tweens through `cc.tween
 - `tests/model/Piece.test.js` — cells, letterAt, shapeKey, pinned/frozen predicates.
 - `tests/model/WordMatcher.test.js` — straight chain, L-shaped chain (PEA layout from the demo), leftward step, no diagonal, no cell reuse, frozen excluded, other word's pin excluded, prefix length reported, first complete chain wins when two exist.
 - `tests/model/FreezeSystem.test.js` — tick, thaw at zero, no negative counters.
-- `tests/systems/GameSession.test.js` — full playthrough of levels 1, 3 and 4 by scripted moves; rejections; counters; completion event; coins.
+- `tests/model/Board.test.js` also covers `findPath`: straight corridor, detour around a piece, block footprint through a one-cell gap (unreachable), unreachable target returns null.
+- `tests/systems/GameSession.test.js` — full playthrough of levels 1, 3 and 4 by scripted single-cell steps; a step onto an occupied cell is refused and the board is unchanged; a two-cell jump is refused; counters; completion event; coins.
 - `tests/systems/SaveStore.test.js` — round trip with in-memory adapter.
-- `tools/solve-level.js` (BFS over piece placements, bounded) — proves every shipped level solvable; wired as a test.
+- `tools/solve-level.js` — breadth-first search over board states where a move is one piece sliding along a free path (using `findPath`), applying clears and freeze ticks after each move; proves every shipped level solvable under the sliding rule and reports the minimum number of slides. Wired as a test; **required before any level ships**, because sliding makes solvability non-obvious (level_004 as currently authored has K boxed in and must be redesigned).
 - Manual checklist in the `testing` skill for the preview build.
 
 ## 12. Implementation order
-1. `data/` constants, `model/Piece`, `model/Board` + tests.
-2. `model/WordMatcher`, `model/FreezeSystem` + tests.
-3. `systems/EventBus`, `systems/GameSession` + scripted playthrough tests (levels 1, 3, 4 green here = rules done).
-4. `view/BoardTiles`, `view/BoardView`, `view/PieceNode` (static render of level 4 in the preview).
-5. `view/DragController` + snap/return tweens.
-6. Clear/thaw animations; `ui/FoundWordsPanel`, `ui/Hud`.
-7. `ui/Game` flow, `LevelCompletePopup`, `SaveStore`, restart/continue.
-8. Solver tool, QA pass, README polish, packaging.
+1. `data/` constants, `model/Piece`, `model/Board` (incl. `findPath`) + tests.
+2. `model/WordMatcher` (chain DFS), `model/FreezeSystem` + tests.
+3. `systems/EventBus`, `systems/GameSession` (beginDrag/dragStep/endDrag/resolve) + scripted playthrough tests.
+4. `tools/solve-level.js` + solvability test; level-designer fixes level_004 (and re-checks 1–3) with it. Rules are done when levels 1–4 solve.
+5. `view/BoardTiles`, `view/BoardView`, `view/PieceNode` (static render of level 4 in the preview; confirm L textures).
+6. `view/DragController` sliding + blocked bump.
+7. Prefix tint, clear/thaw animations; `ui/FoundWordsPanel`, `ui/Hud`.
+8. `ui/Game` flow, `LevelCompletePopup`, `SaveStore`, restart/continue.
+9. QA pass, README polish, packaging.
 
 ## 13. Risks and mitigations
 - **L-shape texture ↔ offsets mismatch** → verify by rendering all six block textures in a debug level before wiring drag.
 - **Touch coordinates after fit-width scaling** → always convert via `convertToNodeSpaceAR` on the board node; test on a 19.5:9 preview size.
 - **Matching twice on shared pieces** → resolve loop skips matches whose pieces are gone; covered by a unit test.
+- **Sliding makes levels unsolvable by accident** → the solver runs in `npm run validate:levels` once it exists; no level ships without a solver pass.
 - **Chain search blow-up** → words are short and branching is at most three per step; a depth cap equal to the word length keeps it bounded, and the test suite includes a dense 6x6 board.
 - **Lost TOUCH_CANCEL** → treat as END; add a safety: if a piece is lifted and no touch for 2 s, return it.
 - **Module resolution** → bare-name `require` with unique filenames; `npm test` mirrors it via NODE_PATH.

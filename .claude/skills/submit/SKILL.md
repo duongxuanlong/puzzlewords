@@ -40,7 +40,7 @@ reviewers asked for `.txt`). It must contain:
 - **Architecture:** three sentences on the engine-free model, view/UI components, and the tooling
   (hooks, validator). Mention Unity-style separation if the reviewer may come from Unity.
 - **Design notes:** the spec interpretations from `docs/specs/word-puzzle-core.md` and ADR 0002 —
-  free placement, chain matching from the pin (4-adjacent path, any direction) with prefix highlighting, frozen hides the letter and thaws at zero,
+  sliding movement through free cells (no passing through pieces), chain matching from the pin (4-adjacent path, any direction) with prefix highlighting, frozen hides the letter and thaws at zero,
   frozen excluded from matching, counters decrement once per cleared word.
 - **Known limitations / not done**, honestly listed.
 

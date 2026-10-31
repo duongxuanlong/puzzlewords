@@ -34,7 +34,7 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
 - Editor: `/Applications/Cocos/Creator/2.4.15/CocosCreator.app` → open this folder → Play for browser preview.
 
 ## Gameplay rules as implemented (see docs/specs/word-puzzle-core.md)
-- Pieces are dragged to any empty cells inside the board; multi-cell blocks move as one unit.
+- Pieces slide one cell at a time through free cells following the finger; they never overlap and cannot pass through other pieces. Multi-cell blocks move as one unit. Every step is committed to the board immediately.
 - A word clears when a chain of 4-adjacent cells (any direction per step, no reuse, no other word's pin) starting at its pinned letter spells it. The longest valid prefix chain is tinted in the word colour after every drop. Frozen cells do not count until thawed.
 - Frozen pieces show a counter and hide their letters; every cleared word decrements all counters; at zero the ice is removed and the piece becomes a normal piece.
 - Pinned letters never move and display their word's length and color.

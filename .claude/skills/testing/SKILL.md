@@ -55,15 +55,16 @@ Use the shipped level JSON as fixtures (`fs.readFileSync` from `assets/resources
 Launch via the `run-and-build` skill (Creator → Play, or `npm run build:web` and serve `build/web-mobile`). Use Chrome device toolbar for aspect ratios. Record the result as pass/fail per line in `docs/qa/playtest-<date>.md`; file a `bug-report` for each fail.
 
 **Core drag and drop**
-- [ ] Drag a free letter to an empty cell: it snaps to the cell center, lands behind pinned letters' depth order, no jitter.
-- [ ] Drop outside the board: piece tweens back to origin, occupancy unchanged.
-- [ ] Drop on an occupied cell: piece returns to origin; the occupant does not move.
-- [ ] Drop back onto its own origin: no error, no state change.
+- [ ] Drag a free letter two cells away along a free corridor: it slides cell by cell (visible intermediate step), ends on the cell centre, no jitter.
+- [ ] Move the finger across another piece: the dragged piece stops at the last free cell and never overlaps; releasing leaves it there.
+- [ ] Move the finger outside the board: the piece stays on its last in-board cell.
+- [ ] Finger far ahead with a detour available: the piece routes around the obstacle on its own.
+- [ ] Release on the origin cell: no error, no state change.
 - [ ] Drag a pinned letter: nothing moves (no lift animation either).
 - [ ] Drag a frozen piece: nothing moves; counter still visible.
-- [ ] Drag a 2-cell block (level_004 OW) so one cell is off-board: returns to origin.
-- [ ] Drag a block to a place where one cell overlaps another piece: returns.
-- [ ] Drag a block to cells partly overlapping its own current cells: accepted.
+- [ ] Drag a 2-cell block (level_004 OW) toward the board edge: it stops when either cell would leave the board.
+- [ ] Drag a block through a one-cell gap: it does not fit and waits; a single letter does.
+- [ ] Slide a block by one cell over its own footprint (vertical block down one): accepted.
 - [ ] Two fingers: second touch during a drag is ignored.
 - [ ] Dragged piece renders above every other piece and the HUD panel.
 

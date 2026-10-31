@@ -44,8 +44,9 @@ Confirm each by reading the code path, not by pattern matching.
   `boardNode.convertToNodeSpaceAR(...)` before dividing by cell size, and the grid origin / anchor
   offset must be applied once. Rows increase downward in level data while Cocos y increases upward:
   check the sign flip happens in exactly one place.
-- **Multi-cell drop validation.** For a linked block every offset cell must be inside the shape and
-  empty, ignoring cells the block itself currently occupies. Rejecting on the anchor only is a bug.
+- **Single-cell steps only.** `dragStep` must refuse any target that is not 4-adjacent to the anchor and must commit the board on success; a view that moves a node without a successful step, or a session that accepts a jump, lets pieces pass through each other.
+- **Multi-cell step validation.** For a linked block every offset cell must be inside the shape and empty at the new position, ignoring cells the block itself currently occupies. Validating the anchor only is a bug.
+- **Path routing stays in the view/helper.** `findPath` is pure BFS over free footprints; the view never moves a piece along a path the session has not stepped.
 - **Frozen pieces** cannot be dragged, hide their letters, and are excluded from word matching until
   thawed. A match that reads through a frozen cell is a bug.
 - **Counters** decrement exactly once per cleared word, for every frozen piece on the board, and the

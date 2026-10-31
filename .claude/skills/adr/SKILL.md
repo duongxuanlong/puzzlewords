@@ -58,9 +58,9 @@ Update it in the same change.
    `npm test` runs `node:test` with `NODE_PATH` so modules resolve by bare name exactly as Creator
    resolves them. Alternative rejected: engine-dependent tests through the Creator test runner (slow,
    editor-bound).
-2. **0002 — Spec interpretations for the Athena brief.** Free placement: a piece drops onto any
-   empty in-board cells, not only adjacent ones. Matching reads from the pinned letter to the right
-   or downward only, exact length. Frozen pieces hide their letter, show the counter, cannot be
+2. **0002 — Spec interpretations for the Athena brief.** Sliding movement: a piece slides one cell at a
+   time through free cells and never passes through another piece. Matching is a chain of 4-adjacent
+   cells from the pin (any direction per step), with the longest prefix tinted in the word colour. Frozen pieces hide their letter, show the counter, cannot be
    dragged, are excluded from matching, and at zero the ice is removed while the letter stays
    (matching the Challenge 1 video, where the brief's "removed from the board" is ambiguous).
    Counters decrement once per cleared word.

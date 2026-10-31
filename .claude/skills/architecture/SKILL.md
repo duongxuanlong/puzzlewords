@@ -26,17 +26,17 @@ assets/scripts/
 - `WordMatcher` — `find(board, level, pieces)` → one result per word `{ wordIndex, cells, pieceIds, complete }`: depth-first search from the pin over 4-adjacent occupied, non-frozen cells spelling the word in order (any direction per step, no reuse, other pins excluded). `complete` results are matches; incomplete ones are the longest prefix, used for highlighting.
 - `FreezeSystem` — `onWordCleared(pieces)` decrements every frozen counter by 1; returns thawed pieces.
 - `Level` — parsed level: words, shape, pieces (validated by `LevelSchema`).
-- `GameSession` (systems) — the state machine for one level: `IDLE → DRAGGING → RESOLVING → COMPLETE`. Owns Board, pieces, matcher, freeze; exposes `tryMove(pieceId, r, c)` and emits events.
+- `GameSession` (systems) — the state machine for one level: `IDLE → DRAGGING → RESOLVING → COMPLETE`. Owns Board, pieces, matcher, freeze; exposes `beginDrag(pieceId)`, `dragStep(pieceId, r, c)` (one 4-adjacent cell, committed immediately so pieces never overlap or pass through each other), `endDrag(pieceId)` (runs resolve) and `findPath(pieceId, r, c)` (BFS over free footprints), and emits events.
 
 ## Events (systems/EventBus.js)
 Plain emitter. Names are constants in `data/Constants.js`:
-`piece:moved`, `piece:rejected`, `word:progress {prefixes}`, `word:cleared {wordIndex, cells, pieceIds}`, `freeze:tick {pieceId, remaining}`, `freeze:thawed {pieceId}`, `level:complete {levelId, coins}`, `level:loaded`.
+`drag:started`, `drag:ended`, `piece:moved`, `piece:rejected`, `word:progress {prefixes}`, `word:cleared {wordIndex, cells, pieceIds}`, `freeze:tick {pieceId, remaining}`, `freeze:thawed {pieceId}`, `level:complete {levelId, coins}`, `level:loaded`.
 View and UI subscribe; the model never subscribes to the view.
 
 ## View
 - `BoardView` owns the grid geometry: `cellToLocal(r,c)`, `localToCell(pos)` (rounds to nearest cell, returns null off-board), builds `BoardTiles` from the shape, creates a `PieceNode` per piece.
 - `PieceNode` renders one piece: block sprite chosen by `offsets` signature (1 cell, 2H, 2V, four L shapes), letter labels, pin badge with word length, ice overlay + counter when frozen, tint from `Palette`.
-- `DragController` is on `BoardView`: on TOUCH_START finds the PieceNode under the finger (reject pinned/frozen), lifts it (zIndex, scale), follows TOUCH_MOVE, on END/CANCEL computes the anchor cell from the anchor sub-node position and calls `session.tryMove`. Accepted → tween to cell; rejected → tween back.
+- `DragController` is on `BoardView`: on TOUCH_START calls `session.beginDrag` and lifts the node; on TOUCH_MOVE converts the finger to a target cell, asks `session.findPath` for a route through free cells and feeds it to `session.dragStep` one cell at a time, tweening each step (the piece stays on cell centres and never floats under the finger); on END/CANCEL waits for the queue to drain, then `session.endDrag`. A blocked step plays a bump and the piece stays.
 - No rules in view code: it never checks letters or words.
 
 ## UI
