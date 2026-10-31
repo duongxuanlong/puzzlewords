@@ -10,10 +10,10 @@ Unity analog: a `.meta` file next to each asset holds its import settings, exact
 ## Folders
 
 ```
-assets/textures/common/      Background.png 1080x1920, Block.png 167x184, Block_back.png 165x178, Button.png 181x182
-assets/textures/challenge1/  BG_Center / BG_Edge_{Top,Bot,Left,Right} / BG_Corner_{TopLeft,TopRight,BotLeft,BotRight}  (all 215x215)
+assets/resources/textures/common/      Background.png 1080x1920, Block.png 167x184, Block_back.png 165x178, Button.png 181x182
+assets/resources/textures/challenge1/  BG_Center / BG_Edge_{Top,Bot,Left,Right} / BG_Corner_{TopLeft,TopRight,BotLeft,BotRight}  (all 215x215)
                              Block_1Cell_Frozen.png 179x191
-assets/textures/challenge2/  Block_2Cell_{Horizontal,Vertical}_{white,Frozen}.png
+assets/resources/textures/challenge2/  Block_2Cell_{Horizontal,Vertical}_{white,Frozen}.png
                              Block_3Cell_{LShape,LShapeReversed,LShapeUp,LShapeUpReversed}_{white,Frozen}.png
 assets/fonts/                bitmap fonts (.fnt + .png) once added
 assets/audio/                sfx/ and music/ (mp3 for web, keep under 200 KB each)
@@ -69,8 +69,8 @@ Concave corners (the inside of the plus in level_004) have no dedicated art; two
 ## Auto atlas
 
 Create one auto atlas per folder that is always used together:
-- `assets/textures/blocks.pac` covering `common/Block*.png`, `challenge1/Block_1Cell_Frozen.png`, `challenge2/*.png` and the nine `challenge1/BG_*.png`. Max size 2048, padding 2, allow rotation off (rotated frames make 9-slice borders confusing), power-of-two on.
-- `assets/textures/ui.pac` for buttons, icons and panel pieces.
+- `assets/resources/textures/blocks.pac` covering `common/Block*.png`, `challenge1/Block_1Cell_Frozen.png`, `challenge2/*.png` and the nine `challenge1/BG_*.png`. Max size 2048, padding 2, allow rotation off (rotated frames make 9-slice borders confusing), power-of-two on.
+- `assets/resources/textures/ui.pac` for buttons, icons and panel pieces.
 - `Background.png` stays loose.
 
 Create via Assets panel → Create → Auto Atlas, then drag textures under that folder; the atlas is built only at **build** time, preview uses loose textures plus the dynamic atlas. Verify batching on a real build, not in preview (see `cocos2x-performance`).

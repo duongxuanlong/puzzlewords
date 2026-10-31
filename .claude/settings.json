@@ -7,7 +7,27 @@
       "Bash(npm run lint)",
       "Bash(npm run solver:report)",
       "Bash(npm run solver:report -- *)",
-      "Bash(node tools/solve-level.js *)"
+      "Bash(node tools/solve-level.js *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run build:web)",
+      "Bash(npm run serve:web)",
+      "Bash(curl -s http://localhost:*)",
+      "Skill",
+      "Read(//Applications/Cocos/Creator/2.4.15/**)",
+      "Read(//Users/macmini/Downloads/athena/**)",
+      "mcp__Claude_Browser__preview_start",
+      "mcp__Claude_Browser__preview_stop",
+      "mcp__Claude_Browser__preview_list",
+      "mcp__Claude_Browser__preview_logs",
+      "mcp__Claude_Browser__tabs_context",
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Browser__get_page_text",
+      "mcp__Claude_Browser__find",
+      "mcp__Claude_Browser__read_console_messages",
+      "mcp__Claude_Browser__read_network_requests",
+      "mcp__Claude_Browser__navigate",
+      "mcp__Claude_Browser__computer",
+      "mcp__Claude_Browser__resize_window"
     ]
   },
   "hooks": {

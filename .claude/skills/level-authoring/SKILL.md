@@ -29,7 +29,7 @@ Levels are JSON files in `assets/resources/levels/level_NNN.json`, loaded at run
 - `shape` — rows top→bottom, equal width; `#` playable cell, `.` hole. Any outline works (the board tiles pick corner/edge/center art per cell).
 - `pieces[].letters` — 1 to 3 uppercase letters. `at` — `[row, col]` of the anchor (first letter).
 - `cells` — one `[dRow, dCol]` offset per letter, first is `[0, 0]`, 4-connected. Omit for single letters.
-  Supported block shapes have art under `assets/textures/challenge2/`: 2 horizontal `[[0,0],[0,1]]`, 2 vertical `[[0,0],[1,0]]`,
+  Supported block shapes have art under `assets/resources/textures/challenge2/`: 2 horizontal `[[0,0],[0,1]]`, 2 vertical `[[0,0],[1,0]]`,
   and four 3-cell L shapes. With the anchor as the first listed cell the four L footprints are
   `[[0,0],[1,0],[1,1]]`, `[[0,0],[1,0],[1,-1]]`, `[[0,0],[0,1],[1,0]]`, `[[0,0],[0,1],[1,1]]` (negative offsets are fine).
   Which texture (`LShape`, `LShapeReversed`, `LShapeUp`, `LShapeUpReversed`) matches which footprint is decided in `PieceNode`; view the PNGs before assuming.

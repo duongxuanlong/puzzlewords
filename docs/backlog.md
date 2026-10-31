@@ -8,8 +8,8 @@ Updated 2026-10-31. Owner: producer. Status legend: ☐ todo · ◐ in progress 
 - ☑ Model: Board (+findPath), Piece, WordMatcher (chain DFS), FreezeSystem; systems: EventBus, GameSession (beginDrag/dragStep/endDrag/animationsDone); `data/Constants` (+ tests, scripted playthroughs of levels 1, 3, 4)
 - ☑ Level solver (`model/Solver.js`, `tools/solve-level.js`), solvability gate in `validate:levels`, replay test through GameSession. Exact minimums for levels 1–3; level 4 is ≤ 9 moves / ≤ 23 slides (upper bounds; exact search does not fit its budget on that board).
 - ☐ Level-design pass with the solver (level-designer): solutions are shorter than the intended walkthroughs. Level 3 clears PEA as P↓E→A instead of the demo's L; level 4 clears BLUE on move 4 with the E already in row 3. Decide whether to tighten them.
-- ☐ View: BoardTiles, BoardView, PieceNode, DragController (grid-constrained sliding)
-- ☐ UI: Game root, Hud, FoundWordsPanel, LevelCompletePopup, ScreenFlow
+- ☑ View: BoardTiles, BoardView, PieceNode, DragController (grid-constrained sliding via `Board.findPath`, blocked bump, prefix tint, clear fly, ice tick/thaw). Textures moved to `assets/resources/textures` so code can load them; `ui/Boot.js` attaches `Game` to the Canvas at launch so the scene needs no editor step. Verified in the web build on level 1 (ONE, TWO clear; level completes).
+- ◐ UI: `Game` root exists (loads frames + level, builds board, topic/level labels, auto-advances to the next level). Still to do: Hud (coins, settings, restart buttons), FoundWordsPanel, LevelCompletePopup, ScreenFlow
 - ☐ Animations: lift/drop, word clear fly, ice shatter
 - ☐ QA pass on all levels and aspect ratios
 - ☐ README.md + README.txt, packaging (see `submit` skill)

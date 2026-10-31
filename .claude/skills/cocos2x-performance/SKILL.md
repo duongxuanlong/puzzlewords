@@ -19,7 +19,7 @@ The renderer walks nodes in render order and merges consecutive quads into one c
 Anything that breaks the chain starts a new call: a Label between two Sprites, a Mask, a Graphics node, a sprite from a different texture, a different blend mode.
 
 Rules for this project:
-- Put every block, ice overlay, board tile and HUD icon into **one auto atlas** (`assets/textures/*.pac`, see `asset-pipeline`). Then the whole board is one call as long as no Label interleaves.
+- Put every block, ice overlay, board tile and HUD icon into **one auto atlas** (`assets/resources/textures/*.pac`, see `asset-pipeline`). Then the whole board is one call as long as no Label interleaves.
 - **Group render order.** Draw all board tiles first (one child container), then all piece sprites (second container), then all letter labels (third container), then counters. A piece node that holds `Sprite + Label` as children interleaves S L S L S L and gives one call per piece. Instead keep labels in a sibling layer positioned over their pieces, or accept the cost only while a piece is being dragged (it is reparented to a top layer anyway).
 - Labels: a `cc.Label` with a system/TTF font renders to its own canvas texture per label → one draw call each. Options:
   - `cacheMode = cc.Label.CacheMode.CHAR` (enum values NONE=0, BITMAP=1, CHAR=2 in `CCLabel.js`): glyphs are packed into a shared char atlas; many labels of the same font batch together. Best for letter tiles (single uppercase characters, limited set).
