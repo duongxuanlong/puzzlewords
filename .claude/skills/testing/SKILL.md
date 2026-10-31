@@ -42,9 +42,9 @@ If a module under test needs `cc`, the module is in the wrong layer; move the lo
 
 Use the shipped level JSON as fixtures (`fs.readFileSync` from `assets/resources/levels`) rather than retyping shapes.
 
-## Solvability tests (once `tools/solve-level.js` exists)
+## Solvability tests
 
-`tests/levels/solvable.test.js` loads every level, runs the solver with a move budget (e.g. 40) and asserts a solution exists; prints min moves. This test also guards the `level-balancing` freeze rule: a counter greater than the number of other words shows up as unsolvable. Keep the solver in `model/Solver.js` so the level-designer role can run it from `npm run validate:levels` in the future.
+`tests/levels/solvable.test.js` runs `Solver.prove` on every shipped level, asserts a solution exists, then replays that solution through `GameSession` (beginDrag / dragStep along `findPath` / endDrag) and asserts the level completes, so the solver and the game cannot disagree about the rules. This also guards the `level-balancing` freeze rule: a counter greater than the number of other words shows up as unsolvable. `npm run validate:levels` runs the same check. Solver unit tests (exact minimum, unsolvable boxes and counters, budgets) are in `tests/model/Solver.test.js`; for timings use `npm run solver:report`.
 
 ## Lint and gates
 

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-// Validates every level JSON in a folder. Usage: node tools/validate-levels.js assets/resources/levels
+// Validates every level JSON in a folder (schema, then solvable under the sliding rule).
+// Usage: node tools/validate-levels.js assets/resources/levels
 'use strict';
+require('./module-paths');
 const fs = require('fs');
 const path = require('path');
-const { validateLevel } = require('../assets/scripts/model/LevelSchema');
+const { validateLevel } = require('LevelSchema');
+const { prove } = require('Solver');
 
 const dir = process.argv[2] || path.join(__dirname, '..', 'assets', 'resources', 'levels');
 const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
@@ -23,12 +26,23 @@ for (const file of files) {
     errors.push(`duplicate id ${level.id}`);
   }
   ids.add(level.id);
+  let solution = '';
+  if (!errors.length) {
+    const proof = prove(level);
+    if (proof.solvable === true) {
+      solution = `, solvable in ≤ ${proof.moves} moves`;
+    } else {
+      errors.push(proof.solvable === false
+        ? 'unsolvable under the sliding rule (run tools/solve-level.js)'
+        : 'solver budget exhausted, solvability unknown (run tools/solve-level.js)');
+    }
+  }
   if (errors.length) {
     failed++;
     console.error(`${file}:`);
     errors.forEach((e) => console.error('  - ' + e));
   } else {
-    console.log(`${file}: ok (${level.topic}: ${level.words.join(', ')})`);
+    console.log(`${file}: ok (${level.topic}: ${level.words.join(', ')}${solution})`);
   }
 }
 console.log(`${files.length - failed}/${files.length} levels valid`);

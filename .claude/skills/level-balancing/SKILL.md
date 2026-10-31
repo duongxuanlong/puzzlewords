@@ -9,7 +9,7 @@ Difficulty in this game comes from four sources: how many letters the player mus
 
 ## Metrics per level
 
-Compute these for every level in a batch (by hand today; `tools/solve-level.js` will print them once the solver exists):
+Compute these for every level in a batch (`node tools/solve-level.js <files>` prints words, letters, cells, free ratio, frozen, blocks, min moves and min slides; the rest by hand). Min values prefixed "≤" are upper bounds from guided search, used when exact search does not fit its state budget (tight boards like level_004):
 
 | Metric | Definition | Source |
 |---|---|---|

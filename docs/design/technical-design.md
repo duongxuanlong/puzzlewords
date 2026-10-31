@@ -237,7 +237,7 @@ TOUCH_CANCEL session.endDrag(id); unlift
 - `tests/model/Board.test.js` also covers `findPath`: straight corridor, detour around a piece, block footprint through a one-cell gap (unreachable), unreachable target returns null.
 - `tests/systems/GameSession.test.js` — full playthrough of levels 1, 3 and 4 by scripted single-cell steps; a step onto an occupied cell is refused and the board is unchanged; a two-cell jump is refused; counters; completion event; coins.
 - `tests/systems/SaveStore.test.js` — round trip with in-memory adapter.
-- `tools/solve-level.js` — breadth-first search over board states where a move is one piece sliding along a free path (using `findPath`), applying clears and freeze ticks after each move; proves every shipped level solvable under the sliding rule and reports the minimum number of slides. Wired as a test; **required before any level ships**, because sliding makes solvability non-obvious (level_004 as currently authored has K boxed in and must be redesigned).
+- `model/Solver.js` + `tools/solve-level.js` — best-first search over board states where a move is one drag to any anchor in `Board.reachable(piece)`, followed by `Resolver.resolve` (the same clear/freeze loop GameSession uses). Weight 0 is uniform-cost search (proven minimum moves or slides); weight > 0 adds "letters missing from chains" as a guide and returns an upper bound fast. Uniform-cost search does not fit on tight boards (level_004: 20 cells, 4 free, > 20k states without reaching the optimum), so `analyze` falls back to guided search and labels the result "≤". Wired into `npm run validate:levels` and `tests/levels/solvable.test.js`; **required before any level ships**. (level_004 turned out solvable; the earlier "K boxed in" note was wrong.)
 - Manual checklist in the `testing` skill for the preview build.
 
 ## 12. Implementation order
@@ -255,7 +255,7 @@ TOUCH_CANCEL session.endDrag(id); unlift
 - **L-shape texture ↔ offsets mismatch** → verify by rendering all six block textures in a debug level before wiring drag.
 - **Touch coordinates after fit-width scaling** → always convert via `convertToNodeSpaceAR` on the board node; test on a 19.5:9 preview size.
 - **Matching twice on shared pieces** → resolve loop skips matches whose pieces are gone; covered by a unit test.
-- **Sliding makes levels unsolvable by accident** → the solver runs in `npm run validate:levels` once it exists; no level ships without a solver pass.
+- **Sliding makes levels unsolvable by accident** → the solver runs in `npm run validate:levels`; no level ships without a solver pass.
 - **Chain search blow-up** → words are short and branching is at most three per step; a depth cap equal to the word length keeps it bounded, and the test suite includes a dense 6x6 board.
 - **Lost TOUCH_CANCEL** → treat as END; add a safety: if a piece is lifted and no touch for 2 s, return it.
 - **Module resolution** → bare-name `require` with unique filenames; `npm test` mirrors it via NODE_PATH.

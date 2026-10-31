@@ -42,7 +42,7 @@ Every word has exactly one pin; letters on the board equal the multiset of lette
 ## Design rules (not enforced by code — your responsibility)
 1. **A chain from each pin.** A word is matched as a path of 4-adjacent cells starting at its pin; each step may go up, down, left or right and no cell is reused (the demo clears PEA as P, E to its left, A below E). Make sure at least one such path of `word.length` cells exists from the pin that does not pass through another word's pin.
 2. **Solvable under sliding.** Pieces slide one cell at a time through free cells and never pass through other pieces, so every piece you need must have a free route to its target at that moment, possibly after moving other pieces out of the way. Later words free up cells as they clear. Write the intended order as a list of slides and check each one has a corridor. Free cells are the puzzle budget: ≥ 2 empty cells on small boards, ≥ 4 on 16+ letter boards, and never box a needed piece in on all four sides (level_004 as first drafted boxed K in).
-   Run `node tools/solve-level.js assets/resources/levels/level_NNN.json` once the solver exists; it is mandatory before a level ships.
+   Run `node tools/solve-level.js assets/resources/levels/level_NNN.json`; it is mandatory before a level ships, and `npm run validate:levels` fails any level the solver cannot solve. Compare its walkthrough with yours: a shorter one means the level is easier than you intended.
 3. **Freeze counters match the order.** A piece needed for the k-th word should have `frozen` ≤ k−1 so it thaws just in time; a counter that can never reach zero before the piece is needed makes the level unsolvable.
 4. **Blocks need their footprint free along the whole route.** A vertical `OW` block for BROWN needs two stacked free cells at every step of its slide, not only at the target; a one-cell gap stops it.
 5. **Distinct colors.** Up to 6 words per level (palette size); keep ≤ 4 for mobile readability.
@@ -61,7 +61,7 @@ Every word has exactly one pin; letters on the board equal the multiset of lette
    ```
 3. Write the step-by-step solution (which piece to which cell, which word clears, counters after each clear).
 4. `npm run validate:levels` → must print `ok` for the file. Fix every error line.
-5. When `tools/solve-level.js` exists, run it and record the minimum move count in `docs/levels/level_NNN.md`.
+5. Run `tools/solve-level.js` and record min moves / min slides in `docs/levels/level_NNN.md` (a "≤" value is an upper bound, not a proven minimum).
 6. Play it in the preview (see `run-and-build`) and confirm the walkthrough.
 
 ## Shipped levels

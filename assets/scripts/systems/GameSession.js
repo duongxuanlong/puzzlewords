@@ -1,6 +1,6 @@
 /**
  * GameSession — state machine for one level: LOADED → IDLE ⇄ DRAGGING → RESOLVING → IDLE | COMPLETE.
- * Engine-free. Owns the Board and Pieces, runs WordMatcher and FreezeSystem, emits EVENTS on the bus.
+ * Engine-free. Owns the Board and Pieces, runs the Resolver (matching + freeze), emits EVENTS on the bus.
  * See docs/design/technical-design.md §4.
  *
  * Input contract (DragController): beginDrag(id), then dragStep(id, r, c) once per 4-adjacent
@@ -11,8 +11,7 @@
 
 const Board = require('Board');
 const Piece = require('Piece');
-const WordMatcher = require('WordMatcher');
-const FreezeSystem = require('FreezeSystem');
+const Resolver = require('Resolver');
 const { validateLevel } = require('LevelSchema');
 const { EVENTS, SESSION_STATE, REJECT, COINS_PER_WORD, LEVEL_REWARD } = require('Constants');
 
@@ -129,43 +128,26 @@ class GameSession {
     return piece ? this.board.findPath(piece, row, col) : null;
   }
 
-  /** Clears every complete word, ticks freeze per clear, repeats until stable. @returns {number} words cleared */
+  /** Runs the shared Resolver and turns its result into events. @returns {number} words cleared */
   _resolve() {
-    let cleared = 0;
-    for (;;) {
-      const results = WordMatcher.find(this.board, this.level, this.pieces);
-      const matches = results.filter((m) => m.complete);
-      if (!matches.length) {
-        this.bus.emit(EVENTS.WORD_PROGRESS, {
-          prefixes: results.map((m) => ({ wordIndex: m.wordIndex, cells: cellsCopy(m.cells), pieceIds: m.pieceIds.slice() })),
-        });
-        return cleared;
-      }
-      matches.forEach((m) => {
-        // Two matches may share a free letter; the first in word order wins, the next loop re-checks the other.
-        if (!m.pieceIds.every((id) => this.piece(id))) {
-          return;
-        }
-        this._clear(m);
-        cleared += 1;
+    const result = Resolver.resolve(this.board, this.level, this.pieces);
+    this.pieces = result.pieces;
+    result.clears.forEach(({ match, ticked, thawed }) => {
+      this.foundWords.add(match.wordIndex);
+      this.coins += COINS_PER_WORD;
+      this.bus.emit(EVENTS.WORD_CLEARED, {
+        wordIndex: match.wordIndex,
+        word: this.level.words[match.wordIndex],
+        cells: cellsCopy(match.cells),
+        pieceIds: match.pieceIds.slice(),
       });
-    }
-  }
-
-  _clear(match) {
-    match.pieceIds.forEach((id) => this.board.remove(id));
-    this.pieces = this.pieces.filter((p) => !match.pieceIds.includes(p.id));
-    this.foundWords.add(match.wordIndex);
-    this.coins += COINS_PER_WORD;
-    this.bus.emit(EVENTS.WORD_CLEARED, {
-      wordIndex: match.wordIndex,
-      word: this.level.words[match.wordIndex],
-      cells: cellsCopy(match.cells),
-      pieceIds: match.pieceIds.slice(),
+      ticked.forEach((t) => this.bus.emit(EVENTS.FREEZE_TICK, t));
+      thawed.forEach((pieceId) => this.bus.emit(EVENTS.FREEZE_THAWED, { pieceId }));
     });
-    const { ticked, thawed } = FreezeSystem.tick(this.pieces);
-    ticked.forEach((t) => this.bus.emit(EVENTS.FREEZE_TICK, t));
-    thawed.forEach((pieceId) => this.bus.emit(EVENTS.FREEZE_THAWED, { pieceId }));
+    this.bus.emit(EVENTS.WORD_PROGRESS, {
+      prefixes: result.progress.map((m) => ({ wordIndex: m.wordIndex, cells: cellsCopy(m.cells), pieceIds: m.pieceIds.slice() })),
+    });
+    return result.clears.length;
   }
 
   _reject(pieceId, reason) {

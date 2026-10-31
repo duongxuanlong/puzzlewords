@@ -7,6 +7,7 @@
     "test": "NODE_PATH=assets/scripts/model:assets/scripts/data:assets/scripts/systems node --test \"tests/**/*.test.js\"",
     "lint": "eslint .",
     "validate:levels": "node tools/validate-levels.js assets/resources/levels",
+    "solver:report": "NODE_PATH=assets/scripts/model:assets/scripts/data:assets/scripts/systems node tools/solver-report.js",
     "check": "npm run lint && npm test && npm run validate:levels",
     "build:web": "sh tools/build.sh web-mobile",
     "build:android": "sh tools/build.sh android",

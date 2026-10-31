@@ -91,6 +91,28 @@ test('findPath: a block does not fit through a one-cell gap, a single letter doe
   assert.deepEqual(board.findPath(a, 2, 2), [[1, 2], [2, 2]]);
 });
 
+test('reachable lists every free anchor with its minimal distance', () => {
+  const board = new Board(['###', '#.#']);
+  const a = single('a', 'A', [0, 0]);
+  const b = single('b', 'B', [0, 2]);
+  board.place(a, 0, 0);
+  board.place(b, 0, 2);
+  const seen = board.reachable(a).map((x) => `${x.at}:${x.distance}`);
+  assert.deepEqual(seen, ['0,0:0', '0,1:1', '1,0:1']);
+  assert.equal(board.reachable(b).some((x) => x.at[0] === 1 && x.at[1] === 2), true);
+});
+
+test('clone has independent occupancy', () => {
+  const board = new Board(['##']);
+  const a = single('a', 'A', [0, 0]);
+  board.place(a, 0, 0);
+  const copy = board.clone();
+  copy.place(a.clone(), 0, 1);
+  assert.equal(board.pieceAt(0, 0), 'a');
+  assert.equal(copy.pieceAt(0, 0), null);
+  assert.equal(copy.pieceAt(0, 1), 'a');
+});
+
 test('findPath returns null for an unreachable or occupied target', () => {
   const board = new Board(['###']);
   const a = single('a', 'A', [0, 0]);

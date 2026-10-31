@@ -23,6 +23,17 @@ class Board {
     this._footprints = new Map(); // pieceId → ["r,c", ...]
   }
 
+  /** Independent occupancy over the same (immutable) cell set; used by the solver to branch states. */
+  clone() {
+    const copy = Object.create(Board.prototype);
+    copy.rows = this.rows;
+    copy.cols = this.cols;
+    copy.cells = this.cells;
+    copy._occupancy = new Map(this._occupancy);
+    copy._footprints = new Map(this._footprints);
+    return copy;
+  }
+
   has(row, col) {
     return this.cells.has(key(row, col));
   }
@@ -111,6 +122,30 @@ class Board {
       }
     }
     return null;
+  }
+
+  /**
+   * Every anchor the piece can slide to through free cells, with its distance in single-cell steps
+   * (breadth-first, so distances are minimal). Includes the current anchor at distance 0.
+   * Used by the solver and by the view to pick the closest reachable cell when the finger's cell is not.
+   * @returns {{ at: number[], distance: number }[]} in order of increasing distance
+   */
+  reachable(piece) {
+    const seen = new Set([key(piece.at[0], piece.at[1])]);
+    const result = [{ at: [piece.at[0], piece.at[1]], distance: 0 }];
+    for (let i = 0; i < result.length; i++) {
+      const { at: [r, c], distance } = result[i];
+      for (const [dr, dc] of STEPS) {
+        const nr = r + dr;
+        const nc = c + dc;
+        const k = key(nr, nc);
+        if (!seen.has(k) && this.canPlace(piece, nr, nc)) {
+          seen.add(k);
+          result.push({ at: [nr, nc], distance: distance + 1 });
+        }
+      }
+    }
+    return result;
   }
 
   _release(pieceId) {

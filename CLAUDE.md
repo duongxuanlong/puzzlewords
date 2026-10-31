@@ -30,6 +30,9 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
 ## Commands
 - `npm test` — model unit tests. `npm run lint` — eslint. `npm run validate:levels` — level data.
 - `npm run check` — all three; also the git pre-commit gate (`git config core.hooksPath .githooks`).
+- `npm run solver:report -- [level_001 ...] [--metric=moves|slides] [--weight=N] [--max-states=N] [--analyze]` — solver timing and results. Use this (pre-approved) instead of writing ad-hoc probe scripts; extend `tools/solver-report.js` if it lacks an option.
+- `node tools/solve-level.js assets/resources/levels/level_00*.json` — difficulty metrics and walkthrough per level (pre-approved).
+- Run these commands plainly so the allowlist matches and the user is not prompted: no `time`, `${...}` / `$PIPESTATUS`, heredocs, `cd … &&` or scratch `node` scripts around them. The Bash tool already reports the exit code; a trailing `| tail -N` is fine.
 - `npm run build:web` — headless Creator build to `build/web-mobile` (set `COCOS_CREATOR` if the editor is elsewhere). `npm run serve:web` serves it at http://localhost:8080.
 - Editor: `/Applications/Cocos/Creator/2.4.15/CocosCreator.app` → open this folder → Play for browser preview.
 

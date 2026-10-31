@@ -21,13 +21,22 @@ class Piece {
       throw new Error(`Piece ${id}: ${letters.length} letters but ${cellOffsets.length} offsets`);
     }
     this.id = id;
-    this.letters = letters;
-    this.offsets = Object.freeze(cellOffsets.map((o) => Object.freeze([o[0], o[1]])));
+    this._letters = letters;
+    this._offsets = Object.isFrozen(cellOffsets)
+      ? cellOffsets
+      : Object.freeze(cellOffsets.map((o) => Object.freeze([o[0], o[1]])));
     this.at = [at[0], at[1]];
     this.pin = pin === undefined ? null : pin;
     this.frozen = frozen || 0;
-    Object.defineProperty(this, 'letters', { writable: false });
-    Object.defineProperty(this, 'offsets', { writable: false });
+  }
+
+  // Getter-only, so assigning throws in strict mode; cheaper than per-instance defineProperty.
+  get letters() {
+    return this._letters;
+  }
+
+  get offsets() {
+    return this._offsets;
   }
 
   /** @returns {Piece} piece for `level.pieces[index]`, id "p<index>" */
@@ -40,6 +49,11 @@ class Piece {
       pin: def.pin,
       frozen: def.frozen,
     });
+  }
+
+  /** Independent copy with the same id (used by the solver to branch board states). */
+  clone() {
+    return new Piece({ id: this.id, letters: this.letters, offsets: this.offsets, at: this.at, pin: this.pin, frozen: this.frozen });
   }
 
   get isPinned() {
