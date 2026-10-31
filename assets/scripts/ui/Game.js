@@ -24,6 +24,8 @@ cc.Class({
     this.frames = null;
     this.levelIndex = 0;
     this._levelComplete = false;
+    this._applyFitPolicy();
+    cc.view.setResizeCallback(() => this._applyFitPolicy());
     this._buildBackground();
     this._buildLabels();
     this._buildBoard();
@@ -56,6 +58,22 @@ cc.Class({
   },
 
   // ---- construction -------------------------------------------------------------------------
+
+  /**
+   * Portrait phones fit the design width (extra height shows more background); a window wider
+   * than the 9:16 design (desktop browser, landscape tablet) fits the height instead so the whole
+   * 1080x1920 layout stays visible. Re-applied on every window resize.
+   */
+  _applyFitPolicy() {
+    const canvas = this.getComponent(cc.Canvas);
+    if (!canvas) {
+      return;
+    }
+    const frame = cc.view.getFrameSize();
+    const wide = frame.width / frame.height > LAYOUT.DESIGN_WIDTH / LAYOUT.DESIGN_HEIGHT;
+    canvas.fitHeight = wide;
+    canvas.fitWidth = !wide;
+  },
 
   _buildBackground() {
     const node = new cc.Node('background');

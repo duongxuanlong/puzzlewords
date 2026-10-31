@@ -30,7 +30,7 @@ const baseRules = {
 
 module.exports = [
   {
-    ignores: ['library/**', 'temp/**', 'local/**', 'build/**', 'node_modules/**', 'packages/**'],
+    ignores: ['library/**', 'temp/**', 'local/**', 'build/**', 'node_modules/**', 'packages/**', 'preview-templates/**'],
   },
   js.configs.recommended,
   {

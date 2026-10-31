@@ -27,7 +27,7 @@ same as `.meta` GUIDs in `Assets/`, with `library/` playing the role of `Library
 
 ## Preview
 
-- **Browser:** Play button (top centre) or `Cmd+P`. Opens `http://localhost:7456`. The preview is
+- **Browser:** Play button (top centre) or `Cmd+P`. Opens `http://localhost:7456`, served from the project's `preview-templates/` (stock Creator page with one change: the "Fit window" device sizes the game to the browser window; pick a device from the dropdown to see a fixed phone size). Edits to the template need a browser reload; a new file in it may need the editor restarted. The preview is
   the project compiled on the fly; script changes hot-reload when "Auto-refresh Preview" is on in
   Preferences. The same URL on the machine's LAN address (shown in the toolbar) runs on a phone.
 - **Simulator:** change the dropdown next to Play from Browser to Simulator. Resolution comes from

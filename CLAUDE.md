@@ -7,6 +7,7 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
 ## Layout
 - `assets/` — the only folder Creator scans. Every file in it gets a `.meta`. Never put tooling here.
   - `scenes/Main.fire` — single scene (Canvas + Camera). UI is built from code.
+- `preview-templates/` — project override of Creator's browser-preview page; its "Fit window" device sizes the game to the window so the preview never scrolls.
   - `scripts/model/` — **engine-free** game logic (Board, Piece, WordMatcher, FreezeSystem, LevelSchema). No `cc` allowed (eslint enforces).
   - `scripts/data/` — engine-free constants, palettes, level index.
   - `scripts/systems/` — engine-free services (save/progression, event bus).
@@ -47,7 +48,7 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
 - Touch: `node.on(cc.Node.EventType.TOUCH_START|TOUCH_MOVE|TOUCH_END|TOUCH_CANCEL, handler, this)`; `event.getLocation()` is world space; `node.convertToNodeSpaceAR(worldPoint)`.
 - Tweens: `cc.tween(node).to(0.2, { position: cc.v3(x, y) }, { easing: 'quadOut' }).call(fn).start()`.
 - Ordering: `node.zIndex`; parent via `node.setParent`/`addChild`. Resources: `cc.resources.load(path, cc.JsonAsset, cb)`.
-- Design resolution 1080x1920, fit width. Use `cc.Widget` for HUD anchoring.
+- Design resolution 1080x1920. `Game` sets the Canvas to fit width on portrait screens and fit height on windows wider than 9:16 (desktop preview), so the full layout is always visible. Use `cc.Widget` for HUD anchoring.
 - Local API reference: `/Applications/Cocos/Creator/2.4.15/CocosCreator.app/Contents/Resources/engine/cocos2d/` (source) and `.../Resources/engine/api.d.ts`. Prefer these over web docs, which mostly cover 3.x.
 
 ## Roles and skills
