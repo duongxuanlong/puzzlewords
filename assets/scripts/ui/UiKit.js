@@ -40,9 +40,9 @@ function sprite(parent, frame, width, height, name) {
  * 9-sliced panel. The pack's textures carry no slice borders in their import settings, so a
  * copy of the frame gets insets at runtime (the shared frame is left untouched).
  */
-function sliced(parent, frame, width, height, rgb, name) {
+function sliced(parent, frame, width, height, rgb, name, inset) {
   const copy = new cc.SpriteFrame(frame.getTexture(), frame.getRect(), frame.isRotated(), frame.getOffset(), frame.getOriginalSize());
-  copy.insetTop = copy.insetBottom = copy.insetLeft = copy.insetRight = LAYOUT.SLICE_INSET;
+  copy.insetTop = copy.insetBottom = copy.insetLeft = copy.insetRight = inset || LAYOUT.SLICE_INSET;
   const node = sprite(parent, copy, width, height, name || 'panel');
   node.getComponent(cc.Sprite).type = cc.Sprite.Type.SLICED;
   if (rgb) {

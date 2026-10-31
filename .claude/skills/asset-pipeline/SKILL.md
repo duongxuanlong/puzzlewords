@@ -10,7 +10,7 @@ Unity analog: a `.meta` file next to each asset holds its import settings, exact
 ## Folders
 
 ```
-assets/resources/textures/common/      Background.png 1080x1920, Block.png 167x184, Block_back.png 165x178, Button.png 181x182
+assets/resources/textures/common/      Background.png 1080x1920, Block.png 167x184, Block_back.png 165x178, Button.png 181x182, Panel.png 256x256 (generated: `node tools/gen-panel-texture.js`, dark 9-slice panel, inset 64)
 assets/resources/textures/challenge1/  BG_Center / BG_Edge_{Top,Bot,Left,Right} / BG_Corner_{TopLeft,TopRight,BotLeft,BotRight}  (all 215x215)
                              Block_1Cell_Frozen.png 179x191
 assets/resources/textures/challenge2/  Block_2Cell_{Horizontal,Vertical}_{white,Frozen}.png

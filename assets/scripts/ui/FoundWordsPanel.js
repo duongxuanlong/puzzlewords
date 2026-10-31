@@ -17,8 +17,8 @@ cc.Class({
     this.frames = frames;
     this.node.setContentSize(LAYOUT.PANEL_WIDTH, LAYOUT.PANEL_HEIGHT);
     this.node.y = LAYOUT.PANEL_Y;
-    UiKit.sliced(this.node, frames.Block, LAYOUT.PANEL_WIDTH, LAYOUT.PANEL_HEIGHT, UI.PANEL, 'bg');
-    const topic = UiKit.label(this.node, '', LAYOUT.TOPIC_FONT, UI.TOPIC, 'topic');
+    UiKit.sliced(this.node, frames.Panel, LAYOUT.PANEL_WIDTH, LAYOUT.PANEL_HEIGHT, null, 'bg', LAYOUT.PANEL_INSET);
+    const topic = UiKit.label(this.node, '', LAYOUT.TOPIC_FONT, UI.PANEL_TITLE, 'topic');
     topic.y = LAYOUT.TOPIC_Y;
     this.topicLabel = topic.getComponent(cc.Label);
     this.rowsNode = new cc.Node('rows');

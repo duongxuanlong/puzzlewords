@@ -31,11 +31,14 @@ cc.Class({
     this.overlay.color = UiKit.color(UI.OVERLAY);
     this.node.addChild(this.overlay);
 
-    this.panel = UiKit.sliced(this.node, frames.Block, LAYOUT.POPUP_WIDTH, LAYOUT.POPUP_HEIGHT, UI.POPUP, 'panel');
-    const title = UiKit.label(this.panel, '', LAYOUT.POPUP_TITLE_FONT, UI.TOPIC, 'title');
+    this.panel = UiKit.sliced(this.node, frames.Panel, LAYOUT.POPUP_WIDTH, LAYOUT.POPUP_HEIGHT, null, 'panel', LAYOUT.PANEL_INSET);
+    // The Panel texture is translucent by design; a second layer makes the dialog nearly opaque so
+    // the board underneath does not show through the text.
+    UiKit.sliced(this.panel, frames.Panel, LAYOUT.POPUP_WIDTH, LAYOUT.POPUP_HEIGHT, null, 'backing', LAYOUT.PANEL_INSET).zIndex = -1;
+    const title = UiKit.label(this.panel, '', LAYOUT.POPUP_TITLE_FONT, UI.PANEL_TITLE, 'title');
     title.y = LAYOUT.POPUP_TITLE_Y;
     this.titleLabel = title.getComponent(cc.Label);
-    const body = UiKit.label(this.panel, '', LAYOUT.POPUP_BODY_FONT, UI.PANEL_TEXT, 'body');
+    const body = UiKit.label(this.panel, '', LAYOUT.POPUP_BODY_FONT, UI.POPUP_TEXT, 'body');
     body.y = LAYOUT.POPUP_BODY_Y;
     this.bodyLabel = body.getComponent(cc.Label);
     this.button = UiKit.button(this.panel, frames.Button, LAYOUT.BUTTON_WIDTH, LAYOUT.BUTTON_HEIGHT, '', LAYOUT.BUTTON_FONT, UI.BUTTON_TEXT, () => this._onButton(), 'button');
