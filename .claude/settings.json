@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm run check)",
+      "Bash(npm test)",
+      "Bash(npm run validate:levels)",
+      "Bash(npm run lint)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
