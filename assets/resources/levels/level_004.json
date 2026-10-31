@@ -1,0 +1,22 @@
+{
+  "id": 4,
+  "topic": "COLORS",
+  "words": ["RED", "BLUE", "PINK", "BROWN"],
+  "shape": ["..##..", "..##..", "######", "######", "..##..", "..##.."],
+  "pieces": [
+    { "letters": "R", "at": [2, 0], "pin": 0 },
+    { "letters": "B", "at": [3, 0], "pin": 1 },
+    { "letters": "P", "at": [0, 2], "pin": 2 },
+    { "letters": "B", "at": [0, 3], "pin": 3 },
+    { "letters": "E", "at": [1, 2] },
+    { "letters": "D", "at": [1, 3] },
+    { "letters": "K", "at": [2, 1] },
+    { "letters": "L", "at": [2, 2] },
+    { "letters": "U", "at": [2, 3] },
+    { "letters": "IN", "at": [2, 4], "cells": [[0, 0], [1, 0]], "frozen": 2 },
+    { "letters": "OW", "at": [2, 5], "cells": [[0, 0], [1, 0]] },
+    { "letters": "R", "at": [3, 1] },
+    { "letters": "N", "at": [3, 2] },
+    { "letters": "E", "at": [3, 3] }
+  ]
+}

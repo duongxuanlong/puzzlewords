@@ -1,0 +1,23 @@
+{
+  "name": "puzzlewords",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Grid-based word puzzle prototype for Cocos Creator 2.4.15 (Athena Studio test)",
+  "scripts": {
+    "test": "NODE_PATH=assets/scripts/model:assets/scripts/data:assets/scripts/systems node --test \"tests/**/*.test.js\"",
+    "lint": "eslint .",
+    "validate:levels": "node tools/validate-levels.js assets/resources/levels",
+    "check": "npm run lint && npm test && npm run validate:levels",
+    "build:web": "sh tools/build.sh web-mobile",
+    "build:android": "sh tools/build.sh android",
+    "build:ios": "sh tools/build.sh ios",
+    "serve:web": "node tools/serve.js build/web-mobile 8080"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "eslint": "^9.14.0",
+    "globals": "^15.12.0"
+  }
+}

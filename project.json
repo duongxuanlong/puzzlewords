@@ -1,0 +1,8 @@
+{
+  "engine": "cocos-creator-js",
+  "packages": "packages",
+  "version": "2.4.15",
+  "id": "84da082e-3bab-448f-bae4-8c3cec4d4486",
+  "isNew": false,
+  "description": "Grid-based word puzzle prototype for Cocos Creator 2.4.15 (Athena Studio test)"
+}

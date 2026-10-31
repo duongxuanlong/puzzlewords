@@ -1,0 +1,5 @@
+#!/bin/sh
+# Commit gate: lint, unit tests and level validation must pass.
+# Enable once per clone:  git config core.hooksPath .githooks
+echo "pre-commit: running npm run check"
+npm run --silent check

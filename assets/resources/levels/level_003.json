@@ -1,0 +1,15 @@
+{
+  "id": 3,
+  "topic": "PLANT",
+  "words": ["PEA", "LILY"],
+  "shape": ["####", "####", ".##."],
+  "pieces": [
+    { "letters": "P", "at": [0, 2], "pin": 0 },
+    { "letters": "L", "at": [1, 0], "pin": 1 },
+    { "letters": "Y", "at": [0, 0] },
+    { "letters": "A", "at": [0, 3] },
+    { "letters": "E", "at": [1, 1] },
+    { "letters": "I", "at": [2, 1], "frozen": 1 },
+    { "letters": "L", "at": [2, 2] }
+  ]
+}

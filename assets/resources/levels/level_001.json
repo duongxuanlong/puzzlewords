@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "topic": "NUMBER",
+  "words": ["ONE", "TWO"],
+  "shape": ["###", "###", "###"],
+  "pieces": [
+    { "letters": "O", "at": [0, 0], "pin": 0 },
+    { "letters": "T", "at": [2, 0], "pin": 1 },
+    { "letters": "E", "at": [0, 2] },
+    { "letters": "W", "at": [1, 2] },
+    { "letters": "N", "at": [2, 1] },
+    { "letters": "O", "at": [2, 2] }
+  ]
+}
