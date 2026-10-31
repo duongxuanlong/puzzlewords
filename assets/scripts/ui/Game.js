@@ -1,16 +1,15 @@
 /**
  * Game — composition root on the Canvas (ADR-0003: UI built from code).
- * Loads the sprite frames once, loads a level JSON from resources, creates the GameSession and the
- * BoardView (+ DragController), and routes session events to the UI. HUD, found-words panel and
- * the level-complete popup are added here as they land; for now a topic/level label and
- * auto-advance to the next level.
- * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Palette.
+ * Loads the sprite frames once, loads a level JSON from resources, creates the GameSession, the
+ * BoardView (+ DragController), the Hud, the FoundWordsPanel and the Popup, and routes session
+ * events to them. Owns the screen flow: restart, level complete → popup → next level (wrapping),
+ * and the settings stub. Coins accumulate across levels for the session (persistence is M2).
+ * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Timing.
  */
 const GameSession = require('GameSession');
 const EventBus = require('EventBus');
-const { EVENTS } = require('Constants');
+const { EVENTS, LEVEL_REWARD, COINS_PER_WORD } = require('Constants');
 const { LAYOUT } = require('Layout');
-const { UI } = require('Palette');
 const { TIMING } = require('Timing');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
@@ -23,33 +22,39 @@ cc.Class({
     this.session = new GameSession(this.bus);
     this.frames = null;
     this.levelIndex = 0;
+    this.totalCoins = 0;
     this._levelComplete = false;
     this._applyFitPolicy();
     cc.view.setResizeCallback(() => this._applyFitPolicy());
     this._buildBackground();
-    this._buildLabels();
     this._buildBoard();
+    this.bus.on(EVENTS.WORD_CLEARED, this._onWordCleared, this);
     this.bus.on(EVENTS.LEVEL_COMPLETE, this._onLevelComplete, this);
   },
 
   start() {
-    this._loadFrames(() => this.loadLevel(this.levelIndex));
+    this._loadFrames(() => {
+      this._buildUi();
+      this.loadLevel(this.levelIndex);
+    });
   },
 
   /** Loads and shows level `index` of LEVEL_IDS (wraps around). */
   loadLevel(index) {
     this.levelIndex = ((index % LEVEL_IDS.length) + LEVEL_IDS.length) % LEVEL_IDS.length;
     this._levelComplete = false;
+    this.popup.hide();
     cc.resources.load('levels/' + LEVEL_IDS[this.levelIndex], cc.JsonAsset, (err, asset) => {
       if (err) {
         cc.error('Game: failed to load level ' + LEVEL_IDS[this.levelIndex], err);
         return;
       }
-      this.session.load(asset.json);
-      this.topicLabel.string = asset.json.topic;
-      this.levelLabel.string = 'LEVEL ' + asset.json.id;
+      const level = asset.json;
+      this.session.load(level);
+      this.hud.setLevel(level.id);
+      this.panel.setTopic(level.topic, level.words);
       this.boardView.bind(this.session, this.frames);
-      this.boardView.setFlyTarget(this.topicNode.convertToWorldSpaceAR(cc.v2(0, 0)));
+      this.boardView.setFlyTarget(this.panel.slotWorldPos());
     });
   },
 
@@ -88,27 +93,6 @@ cc.Class({
     this.backgroundSprite = sprite;
   },
 
-  _buildLabels() {
-    const makeLabel = (name, fontSize, color, y) => {
-      const node = new cc.Node(name);
-      const label = node.addComponent(cc.Label);
-      label.fontSize = fontSize;
-      label.lineHeight = fontSize;
-      label.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
-      node.color = cc.color(color[0], color[1], color[2]);
-      const widget = node.addComponent(cc.Widget);
-      widget.isAlignTop = true;
-      widget.top = y;
-      widget.alignMode = cc.Widget.AlignMode.ON_WINDOW_RESIZE;
-      this.node.addChild(node, 5);
-      return node;
-    };
-    this.levelNode = makeLabel('level', LAYOUT.HUD_FONT, UI.HUD_TEXT, LAYOUT.HUD_HEIGHT / 2 - LAYOUT.HUD_FONT / 2);
-    this.topicNode = makeLabel('topic', LAYOUT.TOPIC_FONT, UI.HUD_TEXT, LAYOUT.HUD_HEIGHT + LAYOUT.PANEL_RADIUS_PAD);
-    this.levelLabel = this.levelNode.getComponent(cc.Label);
-    this.topicLabel = this.topicNode.getComponent(cc.Label);
-  },
-
   _buildBoard() {
     const node = new cc.Node('board');
     node.y = LAYOUT.BOARD_CENTER_Y;
@@ -116,6 +100,26 @@ cc.Class({
     node.addComponent('DragController');
     this.boardView.onSettled = () => this._onBoardSettled();
     this.node.addChild(node, 1);
+  },
+
+  /** HUD, panel and popup need the frames, so they are built after the textures load. */
+  _buildUi() {
+    const hudNode = new cc.Node('hud');
+    this.hud = hudNode.addComponent('Hud');
+    this.hud.init(this.frames);
+    this.hud.onRestart(() => this.restart());
+    this.hud.onSettings(() => this._showSettings());
+    this.node.addChild(hudNode, 5);
+
+    const panelNode = new cc.Node('found-words');
+    this.panel = panelNode.addComponent('FoundWordsPanel');
+    this.panel.init(this.frames);
+    this.node.addChild(panelNode, 4);
+
+    const popupNode = new cc.Node('popup');
+    this.popup = popupNode.addComponent('Popup');
+    this.popup.init(this.frames);
+    this.node.addChild(popupNode, 20);
   },
 
   /** Loads every sprite frame under resources/textures once and indexes them by file name. */
@@ -136,13 +140,45 @@ cc.Class({
 
   // ---- flow -----------------------------------------------------------------------------------
 
+  _onWordCleared({ word, wordIndex }) {
+    // The chips pop in when the flying letters arrive (hold + flight + stagger of the last letter).
+    const arrival = TIMING.CLEAR_HOLD + TIMING.CLEAR_FLY + TIMING.CLEAR_STAGGER * (word.length - 1);
+    this.scheduleOnce(() => {
+      this.panel.addWord(word, wordIndex);
+      this.boardView.setFlyTarget(this.panel.slotWorldPos());
+      this.totalCoins += COINS_PER_WORD;
+      this.hud.setCoins(this.totalCoins);
+    }, arrival);
+  },
+
   _onLevelComplete() {
     this._levelComplete = true;
   },
 
   _onBoardSettled() {
     if (this._levelComplete) {
-      this.scheduleOnce(() => this.loadLevel(this.levelIndex + 1), TIMING.LEVEL_ADVANCE);
+      this.scheduleOnce(() => this._showLevelComplete(), TIMING.LEVEL_ADVANCE);
     }
+  },
+
+  _showLevelComplete() {
+    this.popup.show({
+      title: 'Level completed!',
+      body: '+' + LEVEL_REWARD + ' coins',
+      button: 'Continue',
+      onButton: () => {
+        this.totalCoins += LEVEL_REWARD;
+        this.hud.setCoins(this.totalCoins);
+        this.loadLevel(this.levelIndex + 1);
+      },
+    });
+  },
+
+  _showSettings() {
+    this.popup.show({
+      title: 'Settings',
+      body: 'Sound settings coming soon.',
+      button: 'Close',
+    });
   },
 });

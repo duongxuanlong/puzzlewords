@@ -17,7 +17,7 @@ assets/scripts/
   view/      BoardView.js, PieceNode.js,              cc components: render model, forward input
              DragController.js, BoardTiles.js
   ui/        Game.js (root), Hud.js, FoundWordsPanel.js, cc components: HUD, popups, flow
-             LevelCompletePopup.js, ScreenFlow.js
+             Popup.js, UiKit.js, Boot.js
 ```
 
 ## Model (engine-free)
@@ -40,9 +40,9 @@ View and UI subscribe; the model never subscribes to the view.
 - No rules in view code: it never checks letters or words.
 
 ## UI
-- `Game` (on Canvas) is the composition root: loads level JSON, creates `GameSession`, builds `BoardView`, `Hud`, popups, subscribes to events, handles restart/continue.
-- `Hud`, `FoundWordsPanel`, `LevelCompletePopup` are dumb: methods like `setTopic`, `addWord(word, colorIndex)`, `show(coins)`.
-- `ScreenFlow` orders transitions (level complete → popup → next level).
+- `Game` (on Canvas) is the composition root: loads level JSON, creates `GameSession`, builds `BoardView`, `Hud`, `FoundWordsPanel`, `Popup`, subscribes to events, handles restart/continue and the fit policy. `ui/Boot.js` attaches it at scene launch; `ui/UiKit.js` holds shared node builders.
+- `Hud`, `FoundWordsPanel`, `Popup` are dumb: methods like `setLevel`, `setCoins`, `setTopic`, `addWord(word, wordIndex)`, `show({ title, body, button, onButton })`.
+- Screen flow (level complete → popup → next level, restart) is a few methods in `Game`; split into `ScreenFlow` only if it grows.
 
 ## Placement rules of thumb
 - Needs `cc`? → `view/` or `ui/`. Else → `model/` (rules), `systems/` (orchestration, persistence), `data/` (constants).

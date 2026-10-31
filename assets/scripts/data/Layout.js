@@ -24,16 +24,44 @@ const LAYOUT = Object.freeze({
   BUMP_PX: 8, // blocked-step nudge distance
   FLY_SCALE: 0.5, // cleared letters shrink to this while flying to the panel
 
-  // HUD and panels
+  // HUD (anchored to the top edge)
   HUD_HEIGHT: 180,
-  HUD_FONT: 56,
-  TOPIC_FONT: 44,
+  HUD_FONT: 48,
+  HUD_BUTTON: 110, // settings / restart button size
+  HUD_BUTTON_X: -440, // first button centre; the second sits HUD_BUTTON + HUD_GAP to the right
+  HUD_GAP: 20,
+  HUD_LEVEL_CHIP: [320, 92], // level badge size
+  HUD_COIN_CHIP: [250, 92],
+  HUD_COIN_X: 380,
+  HUD_ICON_FONT: 64,
+
+  // Found-words panel (centre y in canvas space)
   PANEL_WIDTH: 900,
   PANEL_HEIGHT: 380,
   PANEL_Y: 560,
-  PANEL_RADIUS_PAD: 24,
-  POPUP_WIDTH: 900,
-  POPUP_HEIGHT: 1100,
+  TOPIC_FONT: 44,
+  TOPIC_Y: 140, // topic title offset from the panel centre
+  CHIP: 64, // found-word letter chip size
+  CHIP_GAP: 8,
+  CHIP_FONT: 40,
+  ROW_HEIGHT: 76,
+  ROWS_TOP: 60, // first word row centre, offset from the panel centre
+
+  // Modal popup
+  POPUP_WIDTH: 820,
+  POPUP_HEIGHT: 640,
+  POPUP_TITLE_FONT: 64,
+  POPUP_BODY_FONT: 48,
+  POPUP_TITLE_Y: 200,
+  POPUP_BODY_Y: 40,
+  POPUP_BUTTON_Y: -200,
+  BUTTON_WIDTH: 380,
+  BUTTON_HEIGHT: 120,
+  BUTTON_FONT: 48,
+  OVERLAY_OPACITY: 160,
+
+  // 9-slice inset (source pixels) for Block.png / Button.png used as panels and buttons
+  SLICE_INSET: 40,
 });
 
 module.exports = { LAYOUT };

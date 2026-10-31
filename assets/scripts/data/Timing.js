@@ -16,6 +16,8 @@ const TIMING = Object.freeze({
   ICE_TICK: 0.15, // counter punch
   THAW: 0.25, // ice fades and grows, letters fade in
   POPUP: 0.25, // overlay fade, panel scale
+  CHIP_POP: 0.18, // found-word chip appearing in the panel
+  COIN_PUNCH: 0.2, // coin counter scale punch
   LEVEL_ADVANCE: 0.6, // pause after the last word before the next level / popup
   DRAG_TIMEOUT: 2.0, // lifted piece with no touch events is returned after this
 });
