@@ -1,0 +1,22 @@
+# Cocos Creator generated
+/library/
+/temp/
+/local/
+/build/
+native
+
+# npm
+node_modules/
+npm-debug.log
+
+# logs
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Claude local overrides
+.claude/settings.local.json
