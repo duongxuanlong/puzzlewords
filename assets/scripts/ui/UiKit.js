@@ -19,6 +19,7 @@ function label(parent, text, fontSize, rgb, name) {
   l.lineHeight = fontSize;
   l.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
   l.verticalAlign = cc.Label.VerticalAlign.CENTER;
+  l.cacheMode = cc.Label.CacheMode.BITMAP; // UI text changes rarely; lets labels batch with sprites
   node.color = color(rgb);
   parent.addChild(node);
   return node;

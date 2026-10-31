@@ -8,6 +8,7 @@
 const { EVENTS } = require('Constants');
 const { LAYOUT } = require('Layout');
 const { TIMING } = require('Timing');
+const { paletteIndex } = require('Palette');
 
 cc.Class({
   extends: cc.Component,
@@ -123,7 +124,7 @@ cc.Class({
     const tintOf = new Map();
     prefixes.forEach((p) => p.pieceIds.forEach((id) => {
       if (!tintOf.has(id)) {
-        tintOf.set(id, p.wordIndex);
+        tintOf.set(id, paletteIndex(this.session.level, p.wordIndex));
       }
     }));
     this.pieceNodes.forEach((view, id) => view.setTint(tintOf.has(id) ? tintOf.get(id) : null, false));
@@ -131,6 +132,7 @@ cc.Class({
 
   _onCleared({ wordIndex, pieceIds }) {
     const target = this.piecesNode.convertToNodeSpaceAR(this.flyTarget);
+    const colorIndex = paletteIndex(this.session.level, wordIndex);
     pieceIds.forEach((id, i) => {
       const view = this.pieceNodes.get(id);
       if (!view) {
@@ -138,7 +140,7 @@ cc.Class({
       }
       this.pieceNodes.delete(id);
       this._begin();
-      view.playClear(wordIndex, target, i * TIMING.CLEAR_STAGGER, () => this._end());
+      view.playClear(colorIndex, target, i * TIMING.CLEAR_STAGGER, () => this._end());
     });
   },
 
@@ -163,7 +165,8 @@ cc.Class({
     const node = new cc.Node();
     const view = node.addComponent('PieceNode');
     const badge = piece.isPinned ? String(this.session.level.words[piece.pin].length) : '';
-    view.init(piece, this.cellSize, this.frames, badge);
+    const pinColor = piece.isPinned ? paletteIndex(this.session.level, piece.pin) : null;
+    view.init(piece, this.cellSize, this.frames, badge, pinColor);
     node.position = this.pieceLocal(view, piece.at[0], piece.at[1]);
     this.piecesNode.addChild(node);
     this.pieceNodes.set(piece.id, view);

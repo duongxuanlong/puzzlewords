@@ -35,6 +35,7 @@ Levels are JSON files in `assets/resources/levels/level_NNN.json`, loaded at run
   Which texture (`LShape`, `LShapeReversed`, `LShapeUp`, `LShapeUpReversed`) matches which footprint is decided in `PieceNode`; view the PNGs before assuming.
 - `pin` — index into `words`. Pinned pieces are single letters, equal to the word's first letter, never frozen, never move, show the word length.
 - `frozen` — counter ≥ 1. The piece is locked and its letters hidden until `frozen` words have been cleared.
+- `colors` (optional, level-wide) — one palette index per word (`data/Palette.js` WORD_COLORS: 0 pink, 1 green, 2 blue, 3 orange, 4 purple, 5 teal). Omitted: word i uses colour i. Use it to match a word to its meaning (level 4: BLUE blue, PINK pink).
 
 ## Invariants the validator enforces
 Every word has exactly one pin; letters on the board equal the multiset of letters in `words`; pieces inside the shape; no overlaps; blocks connected and ≤ 3 letters.

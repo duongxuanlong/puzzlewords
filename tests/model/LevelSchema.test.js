@@ -66,3 +66,11 @@ test('rejects frozen pins and oversized blocks', () => {
   assert.ok(errors.some((e) => e.includes('cannot be frozen')));
   assert.ok(errors.some((e) => e.includes('longer than 3')));
 });
+
+test('colors is optional but must give one palette index per word', () => {
+  const base = load('level_001.json');
+  assert.deepEqual(validateLevel({ ...base, colors: [0, 1] }), []);
+  assert.ok(validateLevel({ ...base, colors: [0] }).some((e) => e.includes('colors')));
+  assert.ok(validateLevel({ ...base, colors: [0, -1] }).some((e) => e.includes('colors')));
+  assert.ok(validateLevel({ ...base, colors: 'pink' }).some((e) => e.includes('colors')));
+});

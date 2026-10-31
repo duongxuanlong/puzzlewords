@@ -5,10 +5,12 @@
  */
 'use strict';
 
-// Word colours in the order words appear in a level (demo: green, pink, blue, orange, purple, teal).
+// Word colours by palette index: pink, green, blue, orange, purple, teal. A level may pick a
+// palette index per word with `colors` (see paletteIndex); otherwise word i uses colour i, which
+// matches the first demo (ONE pink, TWO green).
 const WORD_COLORS = Object.freeze([
-  Object.freeze([98, 204, 68]),
   Object.freeze([232, 64, 160]),
+  Object.freeze([98, 204, 68]),
   Object.freeze([58, 120, 236]),
   Object.freeze([244, 148, 36]),
   Object.freeze([150, 86, 230]),
@@ -33,9 +35,19 @@ const UI = Object.freeze({
   BUTTON_TEXT: Object.freeze([255, 255, 255]),
 });
 
-/** @returns {number[]} colour for a word index, cycling when a level has more words than colours */
-function wordColor(wordIndex) {
-  return WORD_COLORS[wordIndex % WORD_COLORS.length];
+/** @returns {number[]} colour for a palette index, cycling past the end */
+function wordColor(colorIndex) {
+  return WORD_COLORS[colorIndex % WORD_COLORS.length];
 }
 
-module.exports = { WORD_COLORS, UI, wordColor };
+/**
+ * Palette index for a word of a level: `level.colors[wordIndex]` when the level sets colours
+ * (validated by LevelSchema), else the word index itself.
+ * @param {{ colors?: number[] }} level
+ * @param {number} wordIndex
+ */
+function paletteIndex(level, wordIndex) {
+  return level && Array.isArray(level.colors) ? level.colors[wordIndex] : wordIndex;
+}
+
+module.exports = { WORD_COLORS, UI, wordColor, paletteIndex };

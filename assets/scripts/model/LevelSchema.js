@@ -96,6 +96,13 @@ function validateLevel(level) {
   if (new Set(words).size !== words.length) {
     errors.push('words must be unique');
   }
+  // Optional per-word palette index (view-only; see data/Palette paletteIndex).
+  if (level.colors !== undefined) {
+    const ok = Array.isArray(level.colors) && level.colors.length === words.length && level.colors.every((c) => isInt(c) && c >= 0);
+    if (!ok) {
+      errors.push('colors must be an array of non-negative integers, one per word');
+    }
+  }
 
   const shape = Array.isArray(level.shape) ? level.shape : [];
   if (!shape.length) {

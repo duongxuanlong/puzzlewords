@@ -10,8 +10,8 @@ Updated 2026-10-31. Owner: producer. Status legend: ☐ todo · ◐ in progress 
 - ☐ Level-design pass with the solver (level-designer): solutions are shorter than the intended walkthroughs. Level 3 clears PEA as P↓E→A instead of the demo's L; level 4 clears BLUE on move 4 with the E already in row 3. Decide whether to tighten them.
 - ☑ View: BoardTiles, BoardView, PieceNode, DragController (grid-constrained sliding via `Board.findPath`, blocked bump, prefix tint, clear fly, ice tick/thaw). Textures moved to `assets/resources/textures` so code can load them; `ui/Boot.js` attaches `Game` to the Canvas at launch so the scene needs no editor step. Verified in the web build on level 1 (ONE, TWO clear; level completes).
 - ☑ UI: `Game` root (frames, level loading, fit policy, flow: restart / level complete → popup → next level), `Hud` (settings + restart buttons, level badge, coin counter), `FoundWordsPanel` (topic + tinted letter chips, fly target for clears), `Popup` (modal on the generated dark Panel texture, used for level complete and the settings stub), `UiKit` helpers. Screen flow lives in `Game`; no separate ScreenFlow module.
-- ☐ Animations: lift/drop, word clear fly, ice shatter
-- ☐ QA pass on all levels and aspect ratios
+- ☑ Animations: lift/drop, slide, blocked bump, prefix tint, word clear fly, chip pop, ice tick/thaw, popup (in PieceNode / FoundWordsPanel / Popup; `data/Timing.js`)
+- ☑ QA pass on all levels and aspect ratios: `docs/qa/playtest-2026-10-31.md` (all functional checks pass; persistence is M2). Polish from the pass: per-level `colors`, palette order matching the demo, HUD badge contrast, BITMAP labels (draw calls 26 → 2).
 - ☐ README.md + README.txt, packaging (see `submit` skill)
 
 ## Milestone 2 — Production hardening

@@ -11,6 +11,7 @@ const EventBus = require('EventBus');
 const { EVENTS, LEVEL_REWARD, COINS_PER_WORD } = require('Constants');
 const { LAYOUT } = require('Layout');
 const { TIMING } = require('Timing');
+const { paletteIndex } = require('Palette');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 
@@ -144,7 +145,7 @@ cc.Class({
     // The chips pop in when the flying letters arrive (hold + flight + stagger of the last letter).
     const arrival = TIMING.CLEAR_HOLD + TIMING.CLEAR_FLY + TIMING.CLEAR_STAGGER * (word.length - 1);
     this.scheduleOnce(() => {
-      this.panel.addWord(word, wordIndex);
+      this.panel.addWord(word, paletteIndex(this.session.level, wordIndex));
       this.boardView.setFlyTarget(this.panel.slotWorldPos());
       this.totalCoins += COINS_PER_WORD;
       this.hud.setCoins(this.totalCoins);

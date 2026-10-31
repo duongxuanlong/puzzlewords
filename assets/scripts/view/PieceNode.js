@@ -33,12 +33,14 @@ cc.Class({
    * @param {number} cellSize
    * @param {object} frames sprite frames by texture name
    * @param {string} badgeText word length shown on a pinned letter ('' for free pieces)
+   * @param {number|null} pinColor palette index of the pinned word (null for free pieces)
    */
-  init(piece, cellSize, frames, badgeText) {
+  init(piece, cellSize, frames, badgeText, pinColor) {
     this.piece = piece;
     this.cellSize = cellSize;
     this.frames = frames;
-    this.tint = null; // word index currently tinting the block, or null for white
+    this.pinColor = pinColor === undefined ? null : pinColor;
+    this.tint = null; // palette index currently tinting the block, or null for white
     this._bounds = this._cellBounds(piece);
     this.node.name = 'piece-' + piece.id;
     this.node.setContentSize(this._bounds.width * cellSize, this._bounds.height * cellSize);
@@ -53,7 +55,7 @@ cc.Class({
       this.ice = this._addSprite('ice', frames[textures.frozen]);
       this.counter = this._addCounter();
     }
-    this.setTint(piece.isPinned ? piece.pin : null, true);
+    this.setTint(null, true);
     this.setFrozen(piece.frozen);
   },
 
@@ -62,9 +64,9 @@ cc.Class({
     return cc.v2(-this._bounds.centerC * this.cellSize, this._bounds.centerR * this.cellSize);
   },
 
-  /** @param {number|null} wordIndex colour to show; pinned pieces ignore null */
-  setTint(wordIndex, immediate) {
-    const target = wordIndex === null && this.piece.isPinned ? this.piece.pin : wordIndex;
+  /** @param {number|null} colorIndex palette index to show; pinned pieces fall back to their word's colour */
+  setTint(colorIndex, immediate) {
+    const target = colorIndex === null && this.piece.isPinned ? this.pinColor : colorIndex;
     if (target === this.tint && !immediate) {
       return;
     }
@@ -133,8 +135,8 @@ cc.Class({
    * Holds in the word colour, then flies to `targetLocal` (in the parent's space) shrinking and
    * fading, and destroys the node. @param {cc.Vec2} targetLocal @param {number} delay @param {Function} done
    */
-  playClear(wordIndex, targetLocal, delay, done) {
-    this.setTint(wordIndex, true);
+  playClear(colorIndex, targetLocal, delay, done) {
+    this.setTint(colorIndex, true);
     cc.Tween.stopAllByTarget(this.node);
     this.node.zIndex = LAYOUT.LIFT_Z;
     cc.tween(this.node)
@@ -220,6 +222,7 @@ cc.Class({
     label.lineHeight = fontSize;
     label.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
     label.verticalAlign = cc.Label.VerticalAlign.CENTER;
+    label.cacheMode = cc.Label.CacheMode.BITMAP; // static text: packs into the dynamic atlas so pieces batch
     node.color = color;
     this.node.addChild(node);
     return node;

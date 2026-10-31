@@ -45,15 +45,15 @@ cc.Class({
     return this.node.convertToWorldSpaceAR(cc.v2(0, this._rowY(this.found)));
   },
 
-  /** Adds a word as a row of tinted chips that pop in one after another. */
-  addWord(word, wordIndex) {
-    const row = new cc.Node('word-' + wordIndex);
+  /** Adds a word as a row of chips in palette colour `colorIndex` that pop in one after another. */
+  addWord(word, colorIndex) {
+    const row = new cc.Node('word-' + word);
     row.y = this._rowY(this.found);
     this.rowsNode.addChild(row);
     this.found++;
     const pitch = LAYOUT.CHIP + LAYOUT.CHIP_GAP;
     const x0 = -((word.length - 1) * pitch) / 2;
-    const tint = wordColor(wordIndex);
+    const tint = wordColor(colorIndex);
     word.split('').forEach((letter, i) => {
       const chip = UiKit.sliced(row, this.frames.Block, LAYOUT.CHIP, LAYOUT.CHIP, tint, 'chip');
       chip.x = x0 + i * pitch;

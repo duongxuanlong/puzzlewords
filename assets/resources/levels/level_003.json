@@ -2,6 +2,7 @@
   "id": 3,
   "topic": "PLANT",
   "words": ["PEA", "LILY"],
+  "colors": [3, 5],
   "shape": ["####", "####", ".##."],
   "pieces": [
     { "letters": "P", "at": [0, 2], "pin": 0 },

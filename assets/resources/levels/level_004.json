@@ -2,6 +2,7 @@
   "id": 4,
   "topic": "COLORS",
   "words": ["RED", "BLUE", "PINK", "BROWN"],
+  "colors": [1, 2, 0, 3],
   "shape": ["..##..", "..##..", "######", "######", "..##..", "..##.."],
   "pieces": [
     { "letters": "R", "at": [2, 0], "pin": 0 },

@@ -28,10 +28,11 @@ cc.Class({
     const restart = UiKit.button(this.node, frames.Button, size, size, '↻', LAYOUT.HUD_ICON_FONT, UI.BUTTON_TEXT, () => this._onRestart && this._onRestart(), 'restart');
     restart.x = LAYOUT.HUD_BUTTON_X + size + LAYOUT.HUD_GAP;
 
-    const levelChip = UiKit.sliced(this.node, frames.Block_back, LAYOUT.HUD_LEVEL_CHIP[0], LAYOUT.HUD_LEVEL_CHIP[1], UI.HUD_CHIP, 'level-chip');
+    // Block (white) rather than Block_back (lavender) so the tint is the exact palette colour.
+    const levelChip = UiKit.sliced(this.node, frames.Block, LAYOUT.HUD_LEVEL_CHIP[0], LAYOUT.HUD_LEVEL_CHIP[1], UI.HUD_CHIP, 'level-chip');
     this.levelLabel = UiKit.label(levelChip, '', LAYOUT.HUD_FONT, UI.HUD_TEXT, 'level').getComponent(cc.Label);
 
-    this.coinChip = UiKit.sliced(this.node, frames.Block_back, LAYOUT.HUD_COIN_CHIP[0], LAYOUT.HUD_COIN_CHIP[1], UI.HUD_CHIP, 'coin-chip');
+    this.coinChip = UiKit.sliced(this.node, frames.Block, LAYOUT.HUD_COIN_CHIP[0], LAYOUT.HUD_COIN_CHIP[1], UI.HUD_CHIP, 'coin-chip');
     this.coinChip.x = LAYOUT.HUD_COIN_X;
     const coinLabel = UiKit.label(this.coinChip, '', LAYOUT.HUD_FONT, UI.COIN, 'coins');
     coinLabel.x = -20;
