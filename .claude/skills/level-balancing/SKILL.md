@@ -21,7 +21,7 @@ Compute these for every level in a batch (by hand today; `tools/solve-level.js` 
 | forced order | number of word pairs where A must clear before B (cell conflicts or a frozen letter B needs) | designer walkthrough |
 | frozen pieces | count and counters | JSON |
 | blocks | pieces with 2–3 cells | JSON |
-| line options | for each word, how many straight right/down lines from its pin fit the board | shape + pins |
+| chain options | for each word, how many 4-connected paths of its length start at its pin (bent paths count) | shape + pins |
 
 Red flags: free ratio under 0.15 (feels like a sliding puzzle, frustrating); a frozen counter larger than the number of other words (can never thaw: the validator does not catch this yet, you must); a block whose shape fits in only one place (becomes a lock, not a puzzle); a word with zero line options (unsolvable).
 

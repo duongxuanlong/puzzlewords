@@ -23,14 +23,14 @@ assets/scripts/
 ## Model (engine-free)
 - `Board` — immutable cell set from `shape` + mutable occupancy `Map<"r,c", pieceId>`. API: `has(r,c)`, `isFree(r,c)`, `pieceAt(r,c)`, `place(piece, r, c)`, `remove(pieceId)`, `canPlace(piece, r, c, ignoringSelf)`.
 - `Piece` — `{ id, letters, offsets, at:[r,c], pin: wordIndex|null, frozen: n|0 }`, `cells()` returns absolute cells, `isPinned`, `isFrozen`.
-- `WordMatcher` — `findMatches(board, level)` → `[{ wordIndex, cells, pieceIds }]`. For each pinned piece read right then down `word.length` cells: all occupied, none frozen, letters equal.
+- `WordMatcher` — `find(board, level, pieces)` → one result per word `{ wordIndex, cells, pieceIds, complete }`: depth-first search from the pin over 4-adjacent occupied, non-frozen cells spelling the word in order (any direction per step, no reuse, other pins excluded). `complete` results are matches; incomplete ones are the longest prefix, used for highlighting.
 - `FreezeSystem` — `onWordCleared(pieces)` decrements every frozen counter by 1; returns thawed pieces.
 - `Level` — parsed level: words, shape, pieces (validated by `LevelSchema`).
 - `GameSession` (systems) — the state machine for one level: `IDLE → DRAGGING → RESOLVING → COMPLETE`. Owns Board, pieces, matcher, freeze; exposes `tryMove(pieceId, r, c)` and emits events.
 
 ## Events (systems/EventBus.js)
 Plain emitter. Names are constants in `data/Constants.js`:
-`piece:moved`, `piece:rejected`, `word:cleared {wordIndex, cells, pieceIds}`, `freeze:tick {pieceId, remaining}`, `freeze:thawed {pieceId}`, `level:complete {levelId, coins}`, `level:loaded`.
+`piece:moved`, `piece:rejected`, `word:progress {prefixes}`, `word:cleared {wordIndex, cells, pieceIds}`, `freeze:tick {pieceId, remaining}`, `freeze:thawed {pieceId}`, `level:complete {levelId, coins}`, `level:loaded`.
 View and UI subscribe; the model never subscribes to the view.
 
 ## View

@@ -40,7 +40,7 @@ Levels are JSON files in `assets/resources/levels/level_NNN.json`, loaded at run
 Every word has exactly one pin; letters on the board equal the multiset of letters in `words`; pieces inside the shape; no overlaps; blocks connected and ≤ 3 letters.
 
 ## Design rules (not enforced by code — your responsibility)
-1. **Straight line from each pin.** A word is matched from its pin reading **right or down** only. Make sure `word.length` cells exist in at least one of those directions from the pin.
+1. **A chain from each pin.** A word is matched as a path of 4-adjacent cells starting at its pin; each step may go up, down, left or right and no cell is reused (the demo clears PEA as P, E to its left, A below E). Make sure at least one such path of `word.length` cells exists from the pin that does not pass through another word's pin.
 2. **Solvable in some order.** Later words may reuse cells of earlier words (they clear). Write the intended order and verify every move lands on a free cell at that moment. Free cells: aim for ≥ 2 empty cells on small boards, ≥ 4 on 16+ letter boards.
 3. **Freeze counters match the order.** A piece needed for the k-th word should have `frozen` ≤ k−1 so it thaws just in time; a counter that can never reach zero before the piece is needed makes the level unsolvable.
 4. **Blocks need their footprint free.** A vertical `OW` block for BROWN needs two stacked target cells free at the same moment; plan the clears so that is true.

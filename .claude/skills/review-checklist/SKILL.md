@@ -53,7 +53,7 @@ Confirm each by reading the code path, not by pattern matching.
   when a block completes two lines) must decrement twice.
 - **Pins** are immovable, keep their word colour and show the word length. A pinned piece must never
   be a drag target and must never be part of a linked block.
-- **Matching** reads from the pin to the right and downward only, exact length, exact letters.
+- **Matching** is a chain search from the pin over 4-adjacent cells, any direction per step, no cell reused, other pins excluded, exact letters; incomplete chains only drive highlighting.
 - **Level completion** fires once, after the last word's clear animation, not on every clear.
 - **Level load** goes through `LevelSchema.validateLevel` in debug (`CC_DEBUG`) and fails loudly.
 

@@ -35,7 +35,7 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 
 ## [0.1.0] - 2026-11-02
 ### Added
-- Core word puzzle: drag letters, pinned starts, right/down matching, found-words panel.
+- Core word puzzle: drag letters, pinned starts, chain matching with prefix highlighting, found-words panel.
 - Challenge 1: dynamic board shapes and Freeze counters.
 - Challenge 2: linked 2–3 cell blocks, optionally frozen.
 ```
