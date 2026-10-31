@@ -60,9 +60,10 @@ cc.Class({
   // ---- construction -------------------------------------------------------------------------
 
   /**
-   * Portrait phones fit the design width (extra height shows more background); a window wider
-   * than the 9:16 design (desktop browser, landscape tablet) fits the height instead so the whole
-   * 1080x1920 layout stays visible. Re-applied on every window resize.
+   * Portrait phones fit the design width (extra height shows more background). A window wider
+   * than the 9:16 design (desktop browser, landscape tablet) fits both axes instead, which
+   * letterboxes the 1080x1920 layout as a centred phone-shaped column, so nothing stretches and
+   * the whole layout stays visible. Re-applied on every window resize.
    */
   _applyFitPolicy() {
     const canvas = this.getComponent(cc.Canvas);
@@ -71,8 +72,8 @@ cc.Class({
     }
     const frame = cc.view.getFrameSize();
     const wide = frame.width / frame.height > LAYOUT.DESIGN_WIDTH / LAYOUT.DESIGN_HEIGHT;
+    canvas.fitWidth = true;
     canvas.fitHeight = wide;
-    canvas.fitWidth = !wide;
   },
 
   _buildBackground() {
