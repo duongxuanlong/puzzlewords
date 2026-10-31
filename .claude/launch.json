@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-build",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/serve.js",
+        "build/web-mobile",
+        "8080"
+      ],
+      "port": 8080
+    }
+  ]
+}
