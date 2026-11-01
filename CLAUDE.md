@@ -14,6 +14,7 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
   - `scripts/view/` — cc.Class components rendering the board and pieces, drag handling.
   - `scripts/ui/` — cc.Class components for HUD, popups, screen flow.
   - `resources/levels/level_NNN.json` — level data, loaded with `cc.resources.load`.
+  - `resources/prefabs/` — data-only prefabs (ScriptableObject stand-ins, ADR-0004): `PieceStyle.prefab` holds editor-tunable piece look values, edited in Creator.
   - `resources/textures/{common,challenge1,challenge2}/` — art from the provided pack, under `resources/` so code can load it (`cc.resources.loadDir('textures')`).
 - `tests/` — Node `node:test` suites for the model (`npm test`).
 - `tools/` — validator, build script, Claude hooks. `docs/` — ADRs, specs, backlog.

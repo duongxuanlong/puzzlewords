@@ -34,11 +34,13 @@ cc.Class({
    * @param {object} frames sprite frames by texture name
    * @param {string} badgeText word length shown on a pinned letter ('' for free pieces)
    * @param {number|null} pinColor palette index of the pinned word (null for free pieces)
+   * @param {PieceStyle} style editor-tunable look (badge size, offset, colour)
    */
-  init(piece, cellSize, frames, badgeText, pinColor) {
+  init(piece, cellSize, frames, badgeText, pinColor, style) {
     this.piece = piece;
     this.cellSize = cellSize;
     this.frames = frames;
+    this.style = style;
     this.pinColor = pinColor === undefined ? null : pinColor;
     this.tint = null; // palette index currently tinting the block, or null for white
     this._bounds = this._cellBounds(piece);
@@ -235,9 +237,10 @@ cc.Class({
   },
 
   _addBadge(offset, text) {
-    const node = this._addLabel('badge', text, Math.round(this.cellSize * LAYOUT.BADGE_SIZE), rgb(UI.LETTER_ON_COLOR));
+    const { badgeSize, badgeOffset, badgeColor } = this.style;
+    const node = this._addLabel('badge', text, Math.round(this.cellSize * badgeSize), badgeColor);
     const centre = this._offsetToLocal(offset);
-    node.position = cc.v2(centre.x + this.cellSize * LAYOUT.BADGE_OFFSET, centre.y - this.cellSize * LAYOUT.BADGE_OFFSET);
+    node.position = cc.v2(centre.x + this.cellSize * badgeOffset, centre.y - this.cellSize * badgeOffset);
     return node;
   },
 

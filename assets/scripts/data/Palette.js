@@ -21,6 +21,7 @@ const UI = Object.freeze({
   WHITE: Object.freeze([255, 255, 255]),
   LETTER: Object.freeze([58, 60, 96]), // dark letter on a white block
   LETTER_ON_COLOR: Object.freeze([255, 255, 255]), // letter on a tinted block
+  BADGE: Object.freeze([255, 255, 255]), // word-length number on a pinned letter
   ICE_COUNTER: Object.freeze([255, 255, 255]),
   TOPIC: Object.freeze([58, 120, 236]),
   HUD_TEXT: Object.freeze([255, 255, 255]),

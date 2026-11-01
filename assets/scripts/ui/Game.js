@@ -54,7 +54,7 @@ cc.Class({
       this.session.load(level);
       this.hud.setLevel(level.id);
       this.panel.setTopic(level.topic, level.words);
-      this.boardView.bind(this.session, this.frames);
+      this.boardView.bind(this.session, this.frames, this.pieceStyle);
       this.boardView.setFlyTarget(this.panel.slotWorldPos());
     });
   },
@@ -135,6 +135,21 @@ cc.Class({
         this.frames[f.name] = f;
       });
       this.backgroundSprite.spriteFrame = this.frames.Background;
+      this._loadPieceStyle(done);
+    });
+  },
+
+  /**
+   * Loads resources/prefabs/PieceStyle (editor-tunable piece look, see PieceStyle.js). The prefab's
+   * root node is read directly, never instantiated. Missing prefab → component defaults.
+   */
+  _loadPieceStyle(done) {
+    cc.resources.load('prefabs/PieceStyle', cc.Prefab, (err, prefab) => {
+      const style = err || !prefab.data ? null : prefab.data.getComponent('PieceStyle');
+      if (!style) {
+        cc.warn('Game: PieceStyle prefab missing or without a PieceStyle component; using defaults');
+      }
+      this.pieceStyle = style || new cc.Node('pieceStyle').addComponent('PieceStyle');
       done();
     });
   },

@@ -45,11 +45,13 @@ cc.Class({
    * Binds to a loaded session and builds tiles and pieces. Call again on restart / next level.
    * @param {GameSession} session
    * @param {object} frames sprite frames by texture name
+   * @param {PieceStyle} style editor-tunable piece look from resources/prefabs/PieceStyle
    */
-  bind(session, frames) {
+  bind(session, frames, style) {
     this._unsubscribe.forEach((off) => off());
     this.session = session;
     this.frames = frames;
+    this.style = style;
     const bus = session.bus;
     this._unsubscribe = [
       bus.on(EVENTS.WORD_PROGRESS, this._onProgress, this),
@@ -166,7 +168,7 @@ cc.Class({
     const view = node.addComponent('PieceNode');
     const badge = piece.isPinned ? String(this.session.level.words[piece.pin].length) : '';
     const pinColor = piece.isPinned ? paletteIndex(this.session.level, piece.pin) : null;
-    view.init(piece, this.cellSize, this.frames, badge, pinColor);
+    view.init(piece, this.cellSize, this.frames, badge, pinColor, this.style);
     node.position = this.pieceLocal(view, piece.at[0], piece.at[1]);
     this.piecesNode.addChild(node);
     this.pieceNodes.set(piece.id, view);
