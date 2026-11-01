@@ -13,7 +13,7 @@ Cocos Creator scenes and prefabs are large JSON files that merge badly and canno
 ## Consequences
 - All UI is diff-able and reviewable; agents can build features without the editor.
 - Designers cannot tweak layouts in the editor; a later ADR may move static HUD into a prefab once layouts stabilise.
-- Scene files are never hand-edited (hook enforced). `ui/Boot.js` attaches `Game` to the Canvas at scene launch when the scene lacks it, so no editor step is required; attaching it in the editor is still allowed and takes precedence.
+- Scene files are never hand-edited (hook enforced). `Game` is attached to the Canvas in the editor and saved with the scene; the scene also carries `GameConfig` (ADR-0005) and `ScreenLayout` (ADR-0006). **Amended 2026-11-01:** an earlier `ui/Boot.js` attached `Game` at scene launch so the scene needed no editor step; it was removed once the scene became editor-authored anyway, because a self-assembling scene hid a missing component instead of reporting it. An empty scene now shows nothing, which is the intended failure.
 
 ## Alternatives considered
 - Full editor-authored scene with prefabs: conventional for Cocos teams, but heavy JSON diffs and editor dependency for every change.

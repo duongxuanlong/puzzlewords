@@ -4,8 +4,10 @@
  * BoardView (+ DragController), the Hud, the FoundWordsPanel and the Popup, and routes session
  * events to them. Owns the screen flow: restart, level complete → popup → next level (wrapping),
  * and the settings stub. Coins accumulate across levels for the session (persistence is M2).
- * Layout values come from the GameConfig component on the Canvas when the scene has one, else
- * from data/Layout (see GameConfig.js).
+ * The screen geometry is the ScreenLayout in Main.fire (slot nodes referenced from a component,
+ * ADR-0006; ScreenSlots builds a default when the scene has none); each component is attached to
+ * its slot node. Tunables come from the GameConfig component on the
+ * Canvas when the scene has one, else from data/Layout (see GameConfig.js).
  * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Timing.
  */
 const GameSession = require('GameSession');
@@ -16,6 +18,7 @@ const { TIMING } = require('Timing');
 const { paletteIndex } = require('Palette');
 const PieceStyle = require('PieceStyle');
 const GameConfig = require('GameConfig');
+const ScreenSlots = require('ScreenSlots');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 
@@ -45,12 +48,13 @@ cc.Class({
     this._applyFitPolicy();
     cc.view.setResizeCallback(() => this._applyFitPolicy());
     this._buildBackground();
-    this._buildBoard();
     this.bus.on(EVENTS.WORD_CLEARED, this._onWordCleared, this);
     this.bus.on(EVENTS.LEVEL_COMPLETE, this._onLevelComplete, this);
   },
 
   start() {
+    this.screen = ScreenSlots.resolve(this.node);
+    this._buildBoard();
     this._loadFrames(() => {
       this._buildUi();
       this.loadLevel(this.levelIndex);
@@ -135,33 +139,28 @@ cc.Class({
   },
 
   _buildBoard() {
-    const node = new cc.Node('board');
-    node.y = this.config.boardCenterY;
+    const node = this.screen.board;
     this.boardView = node.addComponent('BoardView');
     this.boardView.config = this.config;
     node.addComponent('DragController');
     this.boardView.onSettled = () => this._onBoardSettled();
-    this.node.addChild(node, 1);
   },
 
-  /** HUD, panel and popup need the frames, so they are built after the textures load. */
+  /**
+   * HUD, panel and popup need the frames, so they are built after the textures load. Each one
+   * lives on its ScreenLayout slot; draw order is the slot order under Screen (board, panel, hud, popup).
+   */
   _buildUi() {
-    const hudNode = new cc.Node('hud');
-    this.hud = hudNode.addComponent('Hud');
-    this.hud.init(this.frames, this.config);
+    this.hud = this.screen.hud.addComponent('Hud');
+    this.hud.init(this.frames);
     this.hud.onRestart(() => this.restart());
     this.hud.onSettings(() => this._showSettings());
-    this.node.addChild(hudNode, 5);
 
-    const panelNode = new cc.Node('found-words');
-    this.panel = panelNode.addComponent('FoundWordsPanel');
-    this.panel.init(this.frames, this.config);
-    this.node.addChild(panelNode, 4);
+    this.panel = this.screen.panel.addComponent('FoundWordsPanel');
+    this.panel.init(this.frames);
 
-    const popupNode = new cc.Node('popup');
-    this.popup = popupNode.addComponent('Popup');
+    this.popup = this.screen.popup.addComponent('Popup');
     this.popup.init(this.frames);
-    this.node.addChild(popupNode, 20);
   },
 
   /** Loads every sprite frame under resources/textures once and indexes them by file name. */

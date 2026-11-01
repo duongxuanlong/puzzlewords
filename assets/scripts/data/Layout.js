@@ -15,6 +15,7 @@ const LAYOUT = Object.freeze({
   BOARD_CENTER_Y: -150, // below the HUD and found-words panel
   TILE_NATIVE: 215, // source size of the BG_* tile textures
   BLOCK_FILL: 0.86, // block sprite width as a fraction of its cell bounding box
+  SLOT_OPACITY: 36, // faint Block_back square in every board cell under the pieces (0-255)
   LETTER_SIZE: 0.46, // font size as a fraction of the cell size
   BADGE_SIZE: 0.2, // word-length badge font size as a fraction of the cell size
   BADGE_OFFSET: 0.27, // badge distance from the cell centre, fraction of the cell size (x right, y down)

@@ -3,8 +3,9 @@
  * the BoardTiles child, one PieceNode per piece, and turns session events into animations.
  * Calls session.animationsDone() once every clear/thaw animation of a drop has finished and then
  * invokes `onSettled`. Input is handled by DragController on the same node.
- * Board size limits come from `config` (ui/GameConfig or its defaults), assigned by Game before bind;
- * without one the data/Layout constants apply.
+ * The node is the `board` slot of the ScreenLayout (ADR-0006): cells shrink so the whole board
+ * fits the slot's content size, capped by `config.boardMaxCell` (ui/GameConfig or its defaults,
+ * assigned by Game before bind). The slot keeps its size, so the touch area is the whole slot.
  * Depends on systems/GameSession (events only), data/Constants, data/Layout.
  */
 const { EVENTS } = require('Constants');
@@ -31,7 +32,7 @@ cc.Class({
     this.session = null;
     this.frames = null;
     // Assigned by the owner, possibly before onLoad, so only filled in when still unset.
-    this.config = this.config || { boardMaxCell: LAYOUT.MAX_CELL, boardMaxWidth: LAYOUT.BOARD_MAX_WIDTH, boardMaxHeight: LAYOUT.BOARD_MAX_HEIGHT };
+    this.config = this.config || { boardMaxCell: LAYOUT.MAX_CELL, slotOpacity: LAYOUT.SLOT_OPACITY };
     this.flyTarget = cc.v2(0, 0); // world position cleared letters fly to
     // `onSettled` (callback after a drop's animations finish) is assigned by the owner, possibly
     // before onLoad runs, so it is deliberately not reset here.
@@ -72,9 +73,8 @@ cc.Class({
     this.rows = board.rows;
     this.cols = board.cols;
     const cfg = this.config;
-    this.cellSize = Math.min(cfg.boardMaxCell, Math.floor(cfg.boardMaxWidth / this.cols), Math.floor(cfg.boardMaxHeight / this.rows));
-    this.node.setContentSize(this.cols * this.cellSize, this.rows * this.cellSize);
-    this.tiles.build(board, this.cellSize, this.frames, (r, c) => this.cellToLocal(r, c));
+    this.cellSize = Math.min(cfg.boardMaxCell, Math.floor(this.node.width / this.cols), Math.floor(this.node.height / this.rows));
+    this.tiles.build(board, this.cellSize, this.frames, (r, c) => this.cellToLocal(r, c), cfg.slotOpacity);
     this.piecesNode.removeAllChildren();
     this.pieceNodes.clear();
     this.session.pieces.forEach((piece) => this._addPiece(piece));

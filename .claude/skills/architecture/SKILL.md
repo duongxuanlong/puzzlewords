@@ -17,7 +17,7 @@ assets/scripts/
   view/      BoardView.js, PieceNode.js,              cc components: render model, forward input
              DragController.js, BoardTiles.js
   ui/        Game.js (root), Hud.js, FoundWordsPanel.js, cc components: HUD, popups, flow
-             Popup.js, UiKit.js, Boot.js
+             Popup.js, UiKit.js, GameConfig.js, ScreenLayout.js, ScreenSlots.js
 ```
 
 ## Model (engine-free)
@@ -40,7 +40,7 @@ View and UI subscribe; the model never subscribes to the view.
 - No rules in view code: it never checks letters or words.
 
 ## UI
-- `Game` (on Canvas) is the composition root: loads level JSON, creates `GameSession`, builds `BoardView`, `Hud`, `FoundWordsPanel`, `Popup`, subscribes to events, handles restart/continue and the fit policy. `ui/Boot.js` attaches it at scene launch; `ui/UiKit.js` holds shared node builders.
+- `Game` (on Canvas) is the composition root: loads level JSON, creates `GameSession`, builds `BoardView`, `Hud`, `FoundWordsPanel`, `Popup`, subscribes to events, handles restart/continue and the fit policy. It is attached to the Canvas in the editor (Main.fire also carries `GameConfig` and `ScreenLayout`, the slot nodes each view fills); `ui/UiKit.js` holds shared node builders.
 - `Hud`, `FoundWordsPanel`, `Popup` are dumb: methods like `setLevel`, `setCoins`, `setTopic`, `addWord(word, wordIndex)`, `show({ title, body, button, onButton })`.
 - Screen flow (level complete → popup → next level, restart) is a few methods in `Game`; split into `ScreenFlow` only if it grows.
 

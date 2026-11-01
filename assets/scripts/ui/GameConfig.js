@@ -1,25 +1,19 @@
 /**
- * GameConfig — editor-tunable layout values, as a data-only component added to the Canvas in
- * Main.fire (Add Component → Custom Component → GameConfig). Unity analogy: a MonoBehaviour that
- * only holds [SerializeField] values, or a ScriptableObject referenced by the scene.
+ * GameConfig — editor-tunable values that are not screen geometry, as a data-only component added
+ * to the Canvas in Main.fire (Add Component → Custom Component → GameConfig). Unity analogy: a
+ * MonoBehaviour that only holds [SerializeField] values. Sizes and positions of the board, panel,
+ * HUD and popup are not here: they are the ScreenLayout slot nodes in Main.fire (ADR-0006).
  *
  * Every property defaults to the matching data/Layout constant, so a scene without the component
  * renders exactly as before: `GameConfig.resolve(canvasNode)` returns the component when present
- * and a plain object of the same keys otherwise. Game reads it once in onLoad and hands it to
- * BoardView, FoundWordsPanel and Hud; nothing else reaches for the component.
- * Values are design pixels (1080x1920, origin at the canvas centre, y up), like data/Layout.
+ * and a plain object of the same keys otherwise. Game reads it once in onLoad and hands it to the
+ * components that need it; nothing else reaches for the component.
  */
 const { LAYOUT } = require('Layout');
 
 const DEFAULTS = Object.freeze({
   boardMaxCell: LAYOUT.MAX_CELL,
-  boardMaxWidth: LAYOUT.BOARD_MAX_WIDTH,
-  boardMaxHeight: LAYOUT.BOARD_MAX_HEIGHT,
-  boardCenterY: LAYOUT.BOARD_CENTER_Y,
-  panelWidth: LAYOUT.PANEL_WIDTH,
-  panelHeight: LAYOUT.PANEL_HEIGHT,
-  panelY: LAYOUT.PANEL_Y,
-  hudHeight: LAYOUT.HUD_HEIGHT,
+  slotOpacity: LAYOUT.SLOT_OPACITY,
 });
 
 const GameConfig = cc.Class({
@@ -31,54 +25,15 @@ const GameConfig = cc.Class({
       type: cc.Integer,
       min: 60,
       displayName: 'Board: max cell',
-      tooltip: 'Cell size cap in design pixels; small boards never draw cells larger than this',
+      tooltip: 'Cell size cap in design pixels; small boards never draw cells larger than this, whatever the board slot size',
     },
-    boardMaxWidth: {
-      default: DEFAULTS.boardMaxWidth,
+    slotOpacity: {
+      default: DEFAULTS.slotOpacity,
       type: cc.Integer,
-      min: 200,
-      displayName: 'Board: max width',
-      tooltip: 'Widest the board may grow; wide boards shrink their cells to fit',
-    },
-    boardMaxHeight: {
-      default: DEFAULTS.boardMaxHeight,
-      type: cc.Integer,
-      min: 200,
-      displayName: 'Board: max height',
-      tooltip: 'Tallest the board may grow; tall boards shrink their cells to fit',
-    },
-    boardCenterY: {
-      default: DEFAULTS.boardCenterY,
-      type: cc.Integer,
-      displayName: 'Board: centre Y',
-      tooltip: 'Vertical centre of the board from the canvas centre (negative = lower)',
-    },
-    panelWidth: {
-      default: DEFAULTS.panelWidth,
-      type: cc.Integer,
-      min: 200,
-      displayName: 'Panel: width',
-      tooltip: 'Found-words panel width',
-    },
-    panelHeight: {
-      default: DEFAULTS.panelHeight,
-      type: cc.Integer,
-      min: 100,
-      displayName: 'Panel: height',
-      tooltip: 'Found-words panel height',
-    },
-    panelY: {
-      default: DEFAULTS.panelY,
-      type: cc.Integer,
-      displayName: 'Panel: centre Y',
-      tooltip: 'Vertical centre of the found-words panel from the canvas centre',
-    },
-    hudHeight: {
-      default: DEFAULTS.hudHeight,
-      type: cc.Integer,
-      min: 60,
-      displayName: 'HUD: height',
-      tooltip: 'Height of the top bar holding the buttons, level and coin chips',
+      range: [0, 255, 1],
+      slide: true,
+      displayName: 'Board: empty-cell square opacity',
+      tooltip: 'Opacity (0-255) of the faint rounded square drawn in every board cell under the pieces; 0 hides them',
     },
   },
 

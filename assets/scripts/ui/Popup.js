@@ -12,12 +12,9 @@ const { TIMING, EASING } = require('Timing');
 cc.Class({
   extends: cc.Component,
 
-  /** Builds the (hidden) popup covering the whole canvas. @param {object} frames */
+  /** Builds the (hidden) popup covering the `popup` slot (the whole canvas). @param {object} frames */
   init(frames) {
-    const widget = this.node.addComponent(cc.Widget);
-    widget.isAlignTop = widget.isAlignBottom = widget.isAlignLeft = widget.isAlignRight = true;
-    widget.top = widget.bottom = widget.left = widget.right = 0;
-    widget.alignMode = cc.Widget.AlignMode.ON_WINDOW_RESIZE;
+    UiKit.stretch(this.node, true, true, true, true);
     this.node.addComponent(cc.BlockInputEvents);
 
     this.overlay = new cc.Node('overlay');

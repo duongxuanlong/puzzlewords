@@ -1,7 +1,8 @@
 /**
  * Hud — top bar: settings and restart buttons, level badge, coin counter. Dumb component:
  * Game calls setLevel / setCoins and registers the button callbacks. Anchored to the top edge
- * with a cc.Widget so it stays put on every aspect ratio.
+ * with a cc.Widget so it stays put on every aspect ratio. The node is the `hud` slot of the
+ * ScreenLayout (ADR-0006), which sets its height.
  * Depends on UiKit, data/Layout, data/Palette, data/Timing.
  */
 const UiKit = require('UiKit');
@@ -15,14 +16,9 @@ cc.Class({
   /**
    * Builds the bar.
    * @param {object} frames sprite frames by name
-   * @param {object} config GameConfig or GameConfig.defaults() (hudHeight)
    */
-  init(frames, config) {
-    this.node.setContentSize(LAYOUT.DESIGN_WIDTH, config.hudHeight);
-    const widget = this.node.addComponent(cc.Widget);
-    widget.isAlignTop = widget.isAlignLeft = widget.isAlignRight = true;
-    widget.top = widget.left = widget.right = 0;
-    widget.alignMode = cc.Widget.AlignMode.ON_WINDOW_RESIZE;
+  init(frames) {
+    UiKit.stretch(this.node, true, false, true, true);
 
     this._onRestart = null;
     this._onSettings = null;

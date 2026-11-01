@@ -1,7 +1,8 @@
 /**
  * FoundWordsPanel — rounded panel under the HUD with the level topic and one row of letter
  * chips per found word, in the word's colour. Dumb component: Game calls setTopic / addWord.
- * slotWorldPos(wordIndex) gives BoardView the fly target for cleared letters.
+ * slotWorldPos(wordIndex) gives BoardView the fly target for cleared letters. The node is the
+ * `panel` slot of the ScreenLayout (ADR-0006), which sets its size and position.
  * Depends on UiKit, data/Layout, data/Palette, data/Timing.
  */
 const UiKit = require('UiKit');
@@ -15,13 +16,10 @@ cc.Class({
   /**
    * Builds the panel.
    * @param {object} frames sprite frames by name
-   * @param {object} config GameConfig or GameConfig.defaults() (panelWidth, panelHeight, panelY)
    */
-  init(frames, config) {
+  init(frames) {
     this.frames = frames;
-    this.node.setContentSize(config.panelWidth, config.panelHeight);
-    this.node.y = config.panelY;
-    UiKit.sliced(this.node, frames.Panel, config.panelWidth, config.panelHeight, null, 'bg', LAYOUT.PANEL_INSET);
+    UiKit.sliced(this.node, frames.Panel, this.node.width, this.node.height, null, 'bg', LAYOUT.PANEL_INSET);
     const topic = UiKit.label(this.node, '', LAYOUT.TOPIC_FONT, UI.PANEL_TITLE, 'topic');
     topic.y = LAYOUT.TOPIC_Y;
     this.topicLabel = topic.getComponent(cc.Label);

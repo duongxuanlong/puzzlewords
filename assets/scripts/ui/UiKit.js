@@ -10,6 +10,21 @@ function color(rgb) {
   return cc.color(rgb[0], rgb[1], rgb[2]);
 }
 
+/**
+ * Stretches `node` to its parent's edges with a cc.Widget (reused when one exists): which edges to
+ * pin, at zero inset. Unity analogy: RectTransform anchors set to stretch.
+ */
+function stretch(node, top, bottom, left, right) {
+  const widget = node.getComponent(cc.Widget) || node.addComponent(cc.Widget);
+  widget.isAlignTop = top;
+  widget.isAlignBottom = bottom;
+  widget.isAlignLeft = left;
+  widget.isAlignRight = right;
+  widget.top = widget.bottom = widget.left = widget.right = 0;
+  widget.alignMode = cc.Widget.AlignMode.ON_WINDOW_RESIZE;
+  return widget;
+}
+
 /** @returns {cc.Node} label node added to parent */
 function label(parent, text, fontSize, rgb, name) {
   const node = new cc.Node(name || 'label');
@@ -67,4 +82,4 @@ function button(parent, frame, width, height, text, fontSize, textRgb, onClick, 
   return node;
 }
 
-module.exports = { color, label, sprite, sliced, button };
+module.exports = { color, label, sprite, sliced, button, stretch };

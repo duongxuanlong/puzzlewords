@@ -5,13 +5,13 @@ description: Load before adding or changing anything in assets/scripts/systems (
 
 # Game systems layer (`assets/scripts/systems/`)
 
-`systems/` is engine-free like `model/` (eslint forbids `cc`, `window`, `document` there; `npm test` runs it in Node). Anything that must touch the engine or the platform does so through a tiny adapter object injected at boot from `assets/scripts/ui/Boot.js` (the only place that knows both worlds). Unity analog: `systems/` is your plain C# services assembly; the adapters are the `MonoBehaviour` bridges.
+`systems/` is engine-free like `model/` (eslint forbids `cc`, `window`, `document` there; `npm test` runs it in Node). Anything that must touch the engine or the platform does so through a tiny adapter object injected at boot from `assets/scripts/ui/Game.js`, the composition root on the Canvas (the only place that knows both worlds). Unity analog: `systems/` is your plain C# services assembly; the adapters are the `MonoBehaviour` bridges.
 
 Modules are required by bare name (`require('EventBus')`), filenames unique project-wide.
 
 ## Event bus
 
-One process-wide bus, created in `Boot`, passed to everything else. Keep it tiny and dependency-free:
+One process-wide bus, created in `Game.onLoad`, passed to everything else. Keep it tiny and dependency-free:
 
 ```js
 // systems/EventBus.js
@@ -30,7 +30,7 @@ View and UI components subscribe in `onEnable` and call the returned unsubscribe
 
 ## Save data and progression
 
-`systems/SaveStore.js` owns one JSON document under a single key. It takes a storage adapter with `getItem(key)` / `setItem(key, value)` / `removeItem(key)`; `Boot` passes `cc.sys.localStorage` (same shape on web and native). Tests pass an in-memory object.
+`systems/SaveStore.js` owns one JSON document under a single key. It takes a storage adapter with `getItem(key)` / `setItem(key, value)` / `removeItem(key)`; `Game` passes `cc.sys.localStorage` (same shape on web and native). Tests pass an in-memory object.
 
 ```js
 const SCHEMA_VERSION = 2;
@@ -74,8 +74,8 @@ Letters on tiles are data; never run them through `t()`.
 
 ## Boot order (engine side, for reference)
 
-1. `Boot.onLoad`: create `EventBus`, `SaveStore(cc.sys.localStorage)`, `Settings`, `Wallet`, `Progression`; expose them on one `Game` service object passed to views via a property or `require('Game').instance`.
+1. `Game.onLoad`: create `EventBus`, `SaveStore(cc.sys.localStorage)`, `Settings`, `Wallet`, `Progression`; expose them on one `Game` service object passed to views via a property or `require('Game').instance`.
 2. Preload `resources/levels` with `cc.resources.loadDir`.
 3. Build HUD, then load `Progression.nextLevelId()`.
 
-Adding a new system: write the module and its Node test first, then the adapter if it needs the platform, then wire it in `Boot`. Record anything persistent (new save fields, new economy constants) in an ADR.
+Adding a new system: write the module and its Node test first, then the adapter if it needs the platform, then wire it in `Game`. Record anything persistent (new save fields, new economy constants) in an ADR.
