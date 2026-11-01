@@ -3,6 +3,8 @@
  * the BoardTiles child, one PieceNode per piece, and turns session events into animations.
  * Calls session.animationsDone() once every clear/thaw animation of a drop has finished and then
  * invokes `onSettled`. Input is handled by DragController on the same node.
+ * Board size limits come from `config` (ui/GameConfig or its defaults), assigned by Game before bind;
+ * without one the data/Layout constants apply.
  * Depends on systems/GameSession (events only), data/Constants, data/Layout.
  */
 const { EVENTS } = require('Constants');
@@ -28,6 +30,8 @@ cc.Class({
     this.pieceNodes = new Map(); // pieceId → PieceNode component
     this.session = null;
     this.frames = null;
+    // Assigned by the owner, possibly before onLoad, so only filled in when still unset.
+    this.config = this.config || { boardMaxCell: LAYOUT.MAX_CELL, boardMaxWidth: LAYOUT.BOARD_MAX_WIDTH, boardMaxHeight: LAYOUT.BOARD_MAX_HEIGHT };
     this.flyTarget = cc.v2(0, 0); // world position cleared letters fly to
     // `onSettled` (callback after a drop's animations finish) is assigned by the owner, possibly
     // before onLoad runs, so it is deliberately not reset here.
@@ -67,7 +71,8 @@ cc.Class({
     const board = this.session.board;
     this.rows = board.rows;
     this.cols = board.cols;
-    this.cellSize = Math.min(LAYOUT.MAX_CELL, Math.floor(LAYOUT.BOARD_MAX_WIDTH / this.cols), Math.floor(LAYOUT.BOARD_MAX_HEIGHT / this.rows));
+    const cfg = this.config;
+    this.cellSize = Math.min(cfg.boardMaxCell, Math.floor(cfg.boardMaxWidth / this.cols), Math.floor(cfg.boardMaxHeight / this.rows));
     this.node.setContentSize(this.cols * this.cellSize, this.rows * this.cellSize);
     this.tiles.build(board, this.cellSize, this.frames, (r, c) => this.cellToLocal(r, c));
     this.piecesNode.removeAllChildren();

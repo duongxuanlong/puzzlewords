@@ -12,9 +12,13 @@ const { TIMING, EASING } = require('Timing');
 cc.Class({
   extends: cc.Component,
 
-  /** Builds the bar. @param {object} frames sprite frames by name */
-  init(frames) {
-    this.node.setContentSize(LAYOUT.DESIGN_WIDTH, LAYOUT.HUD_HEIGHT);
+  /**
+   * Builds the bar.
+   * @param {object} frames sprite frames by name
+   * @param {object} config GameConfig or GameConfig.defaults() (hudHeight)
+   */
+  init(frames, config) {
+    this.node.setContentSize(LAYOUT.DESIGN_WIDTH, config.hudHeight);
     const widget = this.node.addComponent(cc.Widget);
     widget.isAlignTop = widget.isAlignLeft = widget.isAlignRight = true;
     widget.top = widget.left = widget.right = 0;

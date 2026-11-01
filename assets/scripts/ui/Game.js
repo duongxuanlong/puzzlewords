@@ -4,6 +4,8 @@
  * BoardView (+ DragController), the Hud, the FoundWordsPanel and the Popup, and routes session
  * events to them. Owns the screen flow: restart, level complete → popup → next level (wrapping),
  * and the settings stub. Coins accumulate across levels for the session (persistence is M2).
+ * Layout values come from the GameConfig component on the Canvas when the scene has one, else
+ * from data/Layout (see GameConfig.js).
  * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Timing.
  */
 const GameSession = require('GameSession');
@@ -13,6 +15,7 @@ const { LAYOUT } = require('Layout');
 const { TIMING } = require('Timing');
 const { paletteIndex } = require('Palette');
 const PieceStyle = require('PieceStyle');
+const GameConfig = require('GameConfig');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 
@@ -33,6 +36,7 @@ cc.Class({
 
   onLoad() {
     this.bus = new EventBus();
+    this.config = GameConfig.resolve(this.node);
     this.session = new GameSession(this.bus);
     this.frames = null;
     this.levelIndex = 0;
@@ -132,8 +136,9 @@ cc.Class({
 
   _buildBoard() {
     const node = new cc.Node('board');
-    node.y = LAYOUT.BOARD_CENTER_Y;
+    node.y = this.config.boardCenterY;
     this.boardView = node.addComponent('BoardView');
+    this.boardView.config = this.config;
     node.addComponent('DragController');
     this.boardView.onSettled = () => this._onBoardSettled();
     this.node.addChild(node, 1);
@@ -143,14 +148,14 @@ cc.Class({
   _buildUi() {
     const hudNode = new cc.Node('hud');
     this.hud = hudNode.addComponent('Hud');
-    this.hud.init(this.frames);
+    this.hud.init(this.frames, this.config);
     this.hud.onRestart(() => this.restart());
     this.hud.onSettings(() => this._showSettings());
     this.node.addChild(hudNode, 5);
 
     const panelNode = new cc.Node('found-words');
     this.panel = panelNode.addComponent('FoundWordsPanel');
-    this.panel.init(this.frames);
+    this.panel.init(this.frames, this.config);
     this.node.addChild(panelNode, 4);
 
     const popupNode = new cc.Node('popup');

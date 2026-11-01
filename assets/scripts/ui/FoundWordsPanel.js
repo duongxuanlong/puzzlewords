@@ -12,12 +12,16 @@ const { TIMING, EASING } = require('Timing');
 cc.Class({
   extends: cc.Component,
 
-  /** Builds the panel. @param {object} frames sprite frames by name */
-  init(frames) {
+  /**
+   * Builds the panel.
+   * @param {object} frames sprite frames by name
+   * @param {object} config GameConfig or GameConfig.defaults() (panelWidth, panelHeight, panelY)
+   */
+  init(frames, config) {
     this.frames = frames;
-    this.node.setContentSize(LAYOUT.PANEL_WIDTH, LAYOUT.PANEL_HEIGHT);
-    this.node.y = LAYOUT.PANEL_Y;
-    UiKit.sliced(this.node, frames.Panel, LAYOUT.PANEL_WIDTH, LAYOUT.PANEL_HEIGHT, null, 'bg', LAYOUT.PANEL_INSET);
+    this.node.setContentSize(config.panelWidth, config.panelHeight);
+    this.node.y = config.panelY;
+    UiKit.sliced(this.node, frames.Panel, config.panelWidth, config.panelHeight, null, 'bg', LAYOUT.PANEL_INSET);
     const topic = UiKit.label(this.node, '', LAYOUT.TOPIC_FONT, UI.PANEL_TITLE, 'topic');
     topic.y = LAYOUT.TOPIC_Y;
     this.topicLabel = topic.getComponent(cc.Label);
