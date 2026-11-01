@@ -2,7 +2,9 @@
  * PieceNode — renders one Piece: block sprite by shape, one letter label per cell, the word-length
  * badge for pinned letters, and the ice overlay with counter while frozen. Owns its small animations
  * (lift/settle, slide one cell, blocked bump, ice tick, thaw, clear fly). No rules live here.
- * Node tree:  PieceNode (size = cell bounding box) ─ block ─ letters[] ─ badge ─ ice ─ counter
+ * Node tree:  PieceNode (size = cell bounding box) ─ outline ─ block ─ letters[] ─ badge ─ ice ─ counter
+ * The outline is a white ring texture (tools/gen-outline-textures.js) tinted in the style's outline
+ * colour, invisible until the piece is lifted.
  * Depends on data/Palette, data/Timing, data/Layout; BoardView supplies geometry and frames.
  */
 const { wordColor, UI } = require('Palette');
@@ -11,13 +13,13 @@ const { LAYOUT } = require('Layout');
 
 // Piece.shapeKey() → texture base name (docs/design/technical-design.md §3.4).
 const SHAPE_TEXTURE = {
-  '0,0': { white: 'Block', frozen: 'Block_1Cell_Frozen' },
-  '0,0|0,1': { white: 'Block_2Cell_Horizontal_white', frozen: 'Block_2Cell_Horizontal_Frozen' },
-  '0,0|1,0': { white: 'Block_2Cell_Vertical_white', frozen: 'Block_2Cell_Vertical_Frozen' },
-  '0,0|1,0|1,1': { white: 'Block_3Cell_LShape_white', frozen: 'Block_3Cell_LShape_Frozen' },
-  '0,0|1,-1|1,0': { white: 'Block_3Cell_LShapeReversed_white', frozen: 'Block_3Cell_LShapeReversed_Frozen' },
-  '0,0|0,1|1,0': { white: 'Block_3Cell_LShapeUp_white', frozen: 'Block_3Cell_LShapeUp_Frozen' },
-  '0,0|0,1|1,1': { white: 'Block_3Cell_LShapeUpReversed_white', frozen: 'Block_3Cell_LShapeUpReversed_Frozen' },
+  '0,0': { white: 'Block', frozen: 'Block_1Cell_Frozen', outline: 'Block_1Cell_Outline' },
+  '0,0|0,1': { white: 'Block_2Cell_Horizontal_white', frozen: 'Block_2Cell_Horizontal_Frozen', outline: 'Block_2Cell_Horizontal_Outline' },
+  '0,0|1,0': { white: 'Block_2Cell_Vertical_white', frozen: 'Block_2Cell_Vertical_Frozen', outline: 'Block_2Cell_Vertical_Outline' },
+  '0,0|1,0|1,1': { white: 'Block_3Cell_LShape_white', frozen: 'Block_3Cell_LShape_Frozen', outline: 'Block_3Cell_LShape_Outline' },
+  '0,0|1,-1|1,0': { white: 'Block_3Cell_LShapeReversed_white', frozen: 'Block_3Cell_LShapeReversed_Frozen', outline: 'Block_3Cell_LShapeReversed_Outline' },
+  '0,0|0,1|1,0': { white: 'Block_3Cell_LShapeUp_white', frozen: 'Block_3Cell_LShapeUp_Frozen', outline: 'Block_3Cell_LShapeUp_Outline' },
+  '0,0|0,1|1,1': { white: 'Block_3Cell_LShapeUpReversed_white', frozen: 'Block_3Cell_LShapeUpReversed_Frozen', outline: 'Block_3Cell_LShapeUpReversed_Outline' },
 };
 
 function rgb(triple) {
@@ -48,6 +50,7 @@ cc.Class({
     this.node.setContentSize(this._bounds.width * cellSize, this._bounds.height * cellSize);
 
     const textures = SHAPE_TEXTURE[piece.shapeKey()] || SHAPE_TEXTURE['0,0'];
+    this.outline = this._addOutline(frames[textures.outline], frames[textures.white]); // added first: draws under the block
     this.block = this._addSprite('block', frames[textures.white]);
     this.letters = piece.offsets.map((offset, i) => this._addLetter(piece.letters[i], offset));
     this.badge = piece.isPinned ? this._addBadge(piece.offsets[0], badgeText) : null;
@@ -154,6 +157,7 @@ cc.Class({
   lift() {
     this.node.zIndex = LAYOUT.LIFT_Z;
     cc.tween(this.node).to(TIMING.LIFT, { scale: LAYOUT.LIFT_SCALE }, { easing: EASING.LIFT }).start();
+    this._showOutline(true);
   },
 
   settle() {
@@ -163,6 +167,15 @@ cc.Class({
         this.node.zIndex = 0;
       })
       .start();
+    this._showOutline(false);
+  },
+
+  _showOutline(visible) {
+    if (!this.outline) {
+      return;
+    }
+    cc.Tween.stopAllByTarget(this.outline);
+    cc.tween(this.outline).to(TIMING.OUTLINE, { opacity: visible ? 255 : 0 }).start();
   },
 
   /** Slides to a new centre position (one cell). @param {cc.Vec2} localPos @param {Function} done */
@@ -213,6 +226,25 @@ cc.Class({
     const scale = Math.min((this.node.width * LAYOUT.BLOCK_FILL) / size.width, (this.node.height * LAYOUT.BLOCK_FILL) / size.height);
     node.setContentSize(size.width * scale, size.height * scale);
     this.node.addChild(node);
+    return node;
+  },
+
+  /**
+   * The highlight ring, sized relative to the block it was generated from: both canvases share a
+   * centre and the ring's canvas is the block's plus a fixed pad, so the ring keeps that ratio
+   * rather than being refitted to the cell box. Returns null when the ring texture is missing.
+   */
+  _addOutline(frame, blockFrame) {
+    if (!frame || !blockFrame) {
+      return null;
+    }
+    const node = this._addSprite('outline', frame);
+    const ring = frame.getOriginalSize();
+    const block = blockFrame.getOriginalSize();
+    const fit = Math.min((this.node.width * LAYOUT.BLOCK_FILL) / block.width, (this.node.height * LAYOUT.BLOCK_FILL) / block.height);
+    node.setContentSize(ring.width * fit, ring.height * fit);
+    node.color = this.style.outlineColor;
+    node.opacity = 0;
     return node;
   },
 

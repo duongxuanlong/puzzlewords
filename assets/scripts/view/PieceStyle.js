@@ -57,6 +57,10 @@ const PieceStyle = cc.Class({
       default: color(UI.LETTER_ON_COLOR),
       tooltip: 'Letter colour once the block is tinted in a word colour (matched prefix or pinned); the letter template colour is used on a white block',
     },
+    outlineColor: {
+      default: color(UI.HIGHLIGHT),
+      tooltip: 'Tint of the outline ring shown around a piece while it is lifted (the ring textures are white; see tools/gen-outline-textures.js)',
+    },
   },
 
   /** @returns {boolean} true when every template is assigned */

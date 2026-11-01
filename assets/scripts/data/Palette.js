@@ -27,6 +27,7 @@ const UI = Object.freeze({
   HUD_TEXT: Object.freeze([255, 255, 255]),
   HUD_CHIP: Object.freeze([98, 84, 210]), // level and coin badges, lighter than the night background
   COIN: Object.freeze([255, 204, 60]),
+  HIGHLIGHT: Object.freeze([255, 200, 60]), // outline ring around the lifted piece (default; PieceStyle prefab may override)
   PANEL: Object.freeze([245, 248, 255]), // tint for Block-based light panels (popup)
   PANEL_TITLE: Object.freeze([190, 205, 255]), // topic title on the dark Panel texture
   PANEL_TEXT: Object.freeze([58, 60, 96]),

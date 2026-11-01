@@ -6,6 +6,7 @@
 
 const TIMING = Object.freeze({
   LIFT: 0.08, // piece picked up: scale up, raise zIndex
+  OUTLINE: 0.12, // highlight ring fading in on lift and out on settle
   SLIDE_STEP: 0.06, // one cell of sliding
   BUMP: 0.1, // blocked step nudge and back
   SETTLE: 0.1, // drop: scale back, zIndex down
