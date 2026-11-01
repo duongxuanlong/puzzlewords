@@ -15,6 +15,18 @@ const { paletteIndex } = require('Palette');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 
+/**
+ * Phone or tablet, as opposed to a desktop browser. cc.sys.isMobile is a user-agent sniff that
+ * misses iPadOS Safari (it reports itself as a Mac), so a multi-touch screen also counts.
+ * Native builds are always handheld.
+ */
+function isHandheld() {
+  if (cc.sys.isNative || cc.sys.isMobile) {
+    return true;
+  }
+  return typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1;
+}
+
 cc.Class({
   extends: cc.Component,
 
@@ -66,32 +78,55 @@ cc.Class({
   // ---- construction -------------------------------------------------------------------------
 
   /**
-   * Portrait phones fit the design width (extra height shows more background). A window wider
-   * than the 9:16 design (desktop browser, landscape tablet) fits both axes instead, which
-   * letterboxes the 1080x1920 layout as a centred phone-shaped column, so nothing stretches and
-   * the whole layout stays visible. Re-applied on every window resize.
+   * Handheld devices fill their screen: portrait phones fit the design width (extra height shows
+   * more background); a tablet wider than 9:16 fits the design height instead, so the canvas grows
+   * sideways while the layout stays a centred 1080-wide column (every element is positioned from
+   * the centre) and the background covers the whole screen.
+   * Desktop browsers fit both axes (SHOW_ALL): the game is a letterboxed portrait phone column
+   * with black bars, like a phone held up to the monitor. SHOW_ALL clips the GL viewport to that
+   * column, so nothing (not even the background) can paint the bars; that is intended there.
+   * Re-applied on every window resize.
    */
   _applyFitPolicy() {
     const canvas = this.getComponent(cc.Canvas);
     if (!canvas) {
       return;
     }
-    const frame = cc.view.getFrameSize();
-    const wide = frame.width / frame.height > LAYOUT.DESIGN_WIDTH / LAYOUT.DESIGN_HEIGHT;
-    canvas.fitWidth = true;
-    canvas.fitHeight = wide;
+    if (isHandheld()) {
+      const frame = cc.view.getFrameSize();
+      const wide = frame.width / frame.height > LAYOUT.DESIGN_WIDTH / LAYOUT.DESIGN_HEIGHT;
+      canvas.fitWidth = !wide;
+      canvas.fitHeight = wide;
+    } else {
+      canvas.fitWidth = true;
+      canvas.fitHeight = true;
+    }
+    this._layoutBackground();
   },
 
   _buildBackground() {
     const node = new cc.Node('background');
     const sprite = node.addComponent(cc.Sprite);
     sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-    const widget = node.addComponent(cc.Widget);
-    widget.isAlignTop = widget.isAlignBottom = widget.isAlignLeft = widget.isAlignRight = true;
-    widget.top = widget.bottom = widget.left = widget.right = 0;
-    widget.alignMode = cc.Widget.AlignMode.ON_WINDOW_RESIZE;
     this.node.addChild(node, -10);
     this.backgroundSprite = sprite;
+  },
+
+  /**
+   * Sizes the background like CSS `background-size: cover`: scaled uniformly until it fills the
+   * visible canvas, centred, with the overflow cropped by the screen edge. A stretch-to-fit
+   * cc.Widget would distort the 9:16 texture on tablets and desktop windows, which are wider.
+   * Called after every fit-policy change and once the texture is assigned.
+   */
+  _layoutBackground() {
+    const sprite = this.backgroundSprite;
+    if (!sprite || !sprite.spriteFrame) {
+      return;
+    }
+    const visible = cc.view.getVisibleSize();
+    const tex = sprite.spriteFrame.getOriginalSize();
+    const scale = Math.max(visible.width / tex.width, visible.height / tex.height);
+    sprite.node.setContentSize(tex.width * scale, tex.height * scale);
   },
 
   _buildBoard() {
@@ -135,6 +170,7 @@ cc.Class({
         this.frames[f.name] = f;
       });
       this.backgroundSprite.spriteFrame = this.frames.Background;
+      this._layoutBackground();
       this._loadPieceStyle(done);
     });
   },
