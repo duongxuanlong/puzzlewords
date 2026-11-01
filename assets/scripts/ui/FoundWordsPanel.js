@@ -1,7 +1,8 @@
 /**
  * FoundWordsPanel — rounded panel under the HUD with the level topic and one row of letter
- * chips per found word, in the word's colour. Dumb component: Game calls setTopic / addWord.
- * slotWorldPos(wordIndex) gives BoardView the fly target for cleared letters. Sits on the
+ * chips per found word, in the word's colour. Words stack bottom-up: the newest word lands on the
+ * bottom row and every earlier row slides up one step. Dumb component: Game calls setTopic /
+ * addWord. slotWorldPos() gives BoardView the fly target for cleared letters (always the bottom row). Sits on the
  * `panel` slot of the ScreenLayout (ADR-0006), which sets its size and position.
  *
  * Scene-authored (ADR-0007): the panel background, topic label and rows container are referenced
@@ -78,20 +79,31 @@ cc.Class({
     this.found = 0;
   },
 
-  /** Local y of the row the next found word goes on (rows fill top to bottom in found order). */
-  _rowY(rowIndex) {
-    return LAYOUT.ROWS_TOP - rowIndex * LAYOUT.ROW_HEIGHT;
+  /** Local y of a row `stepsUp` rows above the bottom slot. */
+  _rowY(stepsUp) {
+    return LAYOUT.ROWS_BOTTOM + stepsUp * LAYOUT.ROW_HEIGHT;
   },
 
-  /** World position where the next cleared word's letters should fly. */
+  /** World position where the next cleared word's letters should fly: always the bottom row. */
   slotWorldPos() {
-    return this.rows.convertToWorldSpaceAR(cc.v2(0, this._rowY(this.found)));
+    return this.rows.convertToWorldSpaceAR(cc.v2(0, this._rowY(0)));
   },
 
-  /** Adds a word as a row of chips in palette colour `colorIndex` that pop in one after another. */
+  /**
+   * Adds a word on the bottom row as chips in palette colour `colorIndex` that pop in one after
+   * another; the rows already there slide up one step to make room.
+   */
   addWord(word, colorIndex) {
+    // Children are in found order; after this word lands, the i-th of n earlier rows sits n - i steps up.
+    const earlier = this.rows.children;
+    earlier.forEach((row, i) => {
+      cc.Tween.stopAllByTarget(row);
+      cc.tween(row)
+        .to(TIMING.ROW_SHIFT, { y: this._rowY(earlier.length - i) }, { easing: EASING.ROW_SHIFT })
+        .start();
+    });
     const row = new cc.Node('word-' + word);
-    row.y = this._rowY(this.found);
+    row.y = this._rowY(0);
     this.rows.addChild(row);
     this.found++;
     const pitch = LAYOUT.CHIP + LAYOUT.CHIP_GAP;

@@ -17,6 +17,7 @@ const TIMING = Object.freeze({
   THAW: 0.25, // ice fades and grows, letters fade in
   POPUP: 0.25, // overlay fade, panel scale
   CHIP_POP: 0.18, // found-word chip appearing in the panel
+  ROW_SHIFT: 0.2, // earlier found-word rows sliding up to make room for the new one
   COIN_PUNCH: 0.2, // coin counter scale punch
   LEVEL_ADVANCE: 0.6, // pause after the last word before the next level / popup
   DRAG_TIMEOUT: 2.0, // lifted piece with no touch events is returned after this
@@ -29,6 +30,7 @@ const EASING = Object.freeze({
   FLY: 'quadIn',
   PUNCH: 'backOut',
   POPUP: 'backOut',
+  ROW_SHIFT: 'quadOut',
 });
 
 module.exports = { TIMING, EASING };

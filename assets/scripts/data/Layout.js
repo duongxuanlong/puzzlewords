@@ -46,7 +46,7 @@ const LAYOUT = Object.freeze({
   CHIP_GAP: 8,
   CHIP_FONT: 40,
   ROW_HEIGHT: 76,
-  ROWS_TOP: 60, // first word row centre, offset from the panel centre
+  ROWS_BOTTOM: -150, // newest word row centre, offset from the panel centre; earlier words stack upward
 
   // Modal popup
   POPUP_WIDTH: 820,
