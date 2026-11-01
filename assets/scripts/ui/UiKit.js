@@ -40,6 +40,27 @@ function label(parent, text, fontSize, rgb, name) {
   return node;
 }
 
+/**
+ * Assigns `frame` to the Sprite on `node` when the sprite has none yet, or always with `replace`
+ * (an inspector-assigned frame wins over whatever the node carries); applies 9-slice insets when
+ * the sprite is SLICED.
+ */
+function setFrame(node, frame, inset, replace) {
+  const s = node && node.getComponent(cc.Sprite);
+  if (!s) {
+    return;
+  }
+  if (frame && (replace || !s.spriteFrame)) {
+    s.spriteFrame = frame;
+  }
+  if (s.type === cc.Sprite.Type.SLICED) {
+    slice(s.spriteFrame, inset);
+    // The inset setters recompute the frame's UVs but do not touch sprites already rendered with
+    // it (scene-loaded ones), so ask the sprite to rebuild its sliced vertices.
+    s.setVertsDirty();
+  }
+}
+
 /** @returns {cc.Node} sprite node of a fixed size added to parent */
 function sprite(parent, frame, width, height, name) {
   const node = new cc.Node(name || 'sprite');
@@ -53,13 +74,21 @@ function sprite(parent, frame, width, height, name) {
 }
 
 /**
- * 9-sliced panel. The pack's textures carry no slice borders in their import settings, so a
- * copy of the frame gets insets at runtime (the shared frame is left untouched).
+ * Gives `frame` 9-slice insets in place. The pack's textures carry no borders in their import
+ * settings; setting them on the shared frame is safe because SIMPLE sprites (pieces) ignore insets.
+ * Idempotent, so scene-authored sprites and runtime-built ones can both call it.
+ * @returns {cc.SpriteFrame} the same frame
  */
+function slice(frame, inset) {
+  if (frame) {
+    frame.insetTop = frame.insetBottom = frame.insetLeft = frame.insetRight = inset || LAYOUT.SLICE_INSET;
+  }
+  return frame;
+}
+
+/** 9-sliced panel from a pack texture (see slice). */
 function sliced(parent, frame, width, height, rgb, name, inset) {
-  const copy = new cc.SpriteFrame(frame.getTexture(), frame.getRect(), frame.isRotated(), frame.getOffset(), frame.getOriginalSize());
-  copy.insetTop = copy.insetBottom = copy.insetLeft = copy.insetRight = inset || LAYOUT.SLICE_INSET;
-  const node = sprite(parent, copy, width, height, name || 'panel');
+  const node = sprite(parent, slice(frame, inset), width, height, name || 'panel');
   node.getComponent(cc.Sprite).type = cc.Sprite.Type.SLICED;
   if (rgb) {
     node.color = color(rgb);
@@ -68,8 +97,9 @@ function sliced(parent, frame, width, height, rgb, name, inset) {
 }
 
 /**
- * Button with a scale transition and a centred text label.
- * @param {Function} onClick
+ * Button with a scale transition and a centred text label. The cc.Button emits 'click' on the
+ * node; `onClick` is optional so scene-authored buttons can be wired later with node.on('click').
+ * @param {Function} [onClick]
  * @returns {cc.Node}
  */
 function button(parent, frame, width, height, text, fontSize, textRgb, onClick, name) {
@@ -77,9 +107,11 @@ function button(parent, frame, width, height, text, fontSize, textRgb, onClick, 
   const b = node.addComponent(cc.Button);
   b.transition = cc.Button.Transition.SCALE;
   b.zoomScale = 0.92;
-  node.on('click', onClick);
+  if (onClick) {
+    node.on('click', onClick);
+  }
   label(node, text || '', fontSize, textRgb, 'text'); // always present so callers can retitle it
   return node;
 }
 
-module.exports = { color, label, sprite, sliced, button, stretch };
+module.exports = { color, label, sprite, slice, sliced, setFrame, button, stretch };

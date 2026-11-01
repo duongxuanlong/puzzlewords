@@ -5,8 +5,11 @@
  * events to them. Owns the screen flow: restart, level complete → popup → next level (wrapping),
  * and the settings stub. Coins accumulate across levels for the session (persistence is M2).
  * The screen geometry is the ScreenLayout in Main.fire (slot nodes referenced from a component,
- * ADR-0006; ScreenSlots builds a default when the scene has none); each component is attached to
- * its slot node. Tunables come from the GameConfig component on the
+ * ADR-0006; ScreenSlots builds a default when the scene has none). Each slot may already carry
+ * its component from the editor (ADR-0007: Hud, FoundWordsPanel, BoardView authored in the scene);
+ * Game adopts what it finds and adds what is missing. Popups are instantiated on demand from one
+ * prefab per kind (resources/prefabs/PopupLevelComplete, PopupSettings) into the `popup` slot.
+ * The background is a referenced node too, created by `populate` when the component is added. Tunables come from the GameConfig component on the
  * Canvas when the scene has one, else from data/Layout (see GameConfig.js).
  * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Timing.
  */
@@ -21,6 +24,7 @@ const GameConfig = require('GameConfig');
 const ScreenSlots = require('ScreenSlots');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
+const POPUP_KINDS = ['PopupLevelComplete', 'PopupSettings'];
 
 /**
  * Phone or tablet, as opposed to a desktop browser. cc.sys.isMobile is a user-agent sniff that
@@ -37,7 +41,25 @@ function isHandheld() {
 cc.Class({
   extends: cc.Component,
 
+  editor: CC_EDITOR && { executeInEditMode: true, menu: 'Puzzle Words/Game' },
+
+  properties: {
+    backgroundFrame: {
+      default: null,
+      type: cc.SpriteFrame,
+      tooltip: 'Background from resources/textures/common, drawn cover-style behind everything. Left empty, the runtime uses the loaded texture',
+      notify() {
+        this._applyBackgroundFrame(null);
+      },
+    },
+    background: { default: null, type: cc.Node, tooltip: 'Background sprite node (created by populate when empty)' },
+  },
+
   onLoad() {
+    if (CC_EDITOR) {
+      this.populate(null);
+      return;
+    }
     this.bus = new EventBus();
     this.config = GameConfig.resolve(this.node);
     this.session = new GameSession(this.bus);
@@ -45,19 +67,24 @@ cc.Class({
     this.levelIndex = 0;
     this.totalCoins = 0;
     this._levelComplete = false;
+    this.populate(null);
     this._applyFitPolicy();
     cc.view.setResizeCallback(() => this._applyFitPolicy());
-    this._buildBackground();
     this.bus.on(EVENTS.WORD_CLEARED, this._onWordCleared, this);
     this.bus.on(EVENTS.LEVEL_COMPLETE, this._onLevelComplete, this);
   },
 
   start() {
+    if (CC_EDITOR) {
+      return;
+    }
     this.screen = ScreenSlots.resolve(this.node);
     this._buildBoard();
     this._loadFrames(() => {
-      this._buildUi();
-      this.loadLevel(this.levelIndex);
+      this._loadPopupPrefabs(() => {
+        this._buildUi();
+        this.loadLevel(this.levelIndex);
+      });
     });
   },
 
@@ -65,7 +92,7 @@ cc.Class({
   loadLevel(index) {
     this.levelIndex = ((index % LEVEL_IDS.length) + LEVEL_IDS.length) % LEVEL_IDS.length;
     this._levelComplete = false;
-    this.popup.hide();
+    this._closePopup();
     cc.resources.load('levels/' + LEVEL_IDS[this.levelIndex], cc.JsonAsset, (err, asset) => {
       if (err) {
         cc.error('Game: failed to load level ' + LEVEL_IDS[this.levelIndex], err);
@@ -113,12 +140,31 @@ cc.Class({
     this._layoutBackground();
   },
 
-  _buildBackground() {
-    const node = new cc.Node('background');
-    const sprite = node.addComponent(cc.Sprite);
-    sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
-    this.node.addChild(node, -10);
-    this.backgroundSprite = sprite;
+  /** Creates the background node when unassigned (editor on add, or runtime on a bare scene). */
+  populate(frames) {
+    if (!this.background) {
+      this.background = new cc.Node('background');
+      const sprite = this.background.addComponent(cc.Sprite);
+      sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+      sprite.trim = false;
+      this.node.addChild(this.background);
+      this.background.setSiblingIndex(0);
+    }
+    this.background.zIndex = -10;
+    this.backgroundSprite = this.background.getComponent(cc.Sprite);
+    this._applyBackgroundFrame(frames);
+  },
+
+  _applyBackgroundFrame(frames) {
+    if (!this.background) {
+      return;
+    }
+    const sprite = this.background.getComponent(cc.Sprite);
+    const frame = this.backgroundFrame || (frames && frames.Background);
+    if (frame && (this.backgroundFrame || !sprite.spriteFrame)) {
+      sprite.spriteFrame = frame;
+    }
+    this._layoutBackground();
   },
 
   /**
@@ -132,7 +178,7 @@ cc.Class({
     if (!sprite || !sprite.spriteFrame) {
       return;
     }
-    const visible = cc.view.getVisibleSize();
+    const visible = CC_EDITOR ? cc.size(LAYOUT.DESIGN_WIDTH, LAYOUT.DESIGN_HEIGHT) : cc.view.getVisibleSize();
     const tex = sprite.spriteFrame.getOriginalSize();
     const scale = Math.max(visible.width / tex.width, visible.height / tex.height);
     sprite.node.setContentSize(tex.width * scale, tex.height * scale);
@@ -140,9 +186,11 @@ cc.Class({
 
   _buildBoard() {
     const node = this.screen.board;
-    this.boardView = node.addComponent('BoardView');
+    this.boardView = node.getComponent('BoardView') || node.addComponent('BoardView');
     this.boardView.config = this.config;
-    node.addComponent('DragController');
+    if (!node.getComponent('DragController')) {
+      node.addComponent('DragController');
+    }
     this.boardView.onSettled = () => this._onBoardSettled();
   },
 
@@ -151,16 +199,60 @@ cc.Class({
    * lives on its ScreenLayout slot; draw order is the slot order under Screen (board, panel, hud, popup).
    */
   _buildUi() {
-    this.hud = this.screen.hud.addComponent('Hud');
+    const hudSlot = this.screen.hud;
+    this.hud = hudSlot.getComponent('Hud') || hudSlot.addComponent('Hud');
     this.hud.init(this.frames);
     this.hud.onRestart(() => this.restart());
     this.hud.onSettings(() => this._showSettings());
 
-    this.panel = this.screen.panel.addComponent('FoundWordsPanel');
+    const panelSlot = this.screen.panel;
+    this.panel = panelSlot.getComponent('FoundWordsPanel') || panelSlot.addComponent('FoundWordsPanel');
     this.panel.init(this.frames);
+  },
 
-    this.popup = this.screen.popup.addComponent('Popup');
-    this.popup.init(this.frames);
+  /** Loads one prefab per popup kind (POPUP_KINDS); a missing prefab falls back to a code-built popup. */
+  _loadPopupPrefabs(done) {
+    this.popupPrefabs = {};
+    let pending = POPUP_KINDS.length;
+    POPUP_KINDS.forEach((kind) => {
+      cc.resources.load('prefabs/' + kind, cc.Prefab, (err, prefab) => {
+        if (err || !prefab) {
+          cc.warn('Game: prefab ' + kind + ' missing; that popup will be built in code');
+        } else {
+          this.popupPrefabs[kind] = prefab;
+        }
+        if (--pending === 0) {
+          done();
+        }
+      });
+    });
+  },
+
+  /**
+   * Instantiates the popup of `kind` (a component name and prefab name) into the popup slot and
+   * shows it. Only one popup at a time: an open one is closed first. The popup destroys its node
+   * when it hides.
+   * @param {string} kind
+   * @param {object} opts passed to the kind's show()
+   * @returns {Popup}
+   */
+  _showPopup(kind, opts) {
+    this._closePopup();
+    const prefab = this.popupPrefabs[kind];
+    const node = prefab ? cc.instantiate(prefab) : new cc.Node(kind);
+    this.screen.popup.addChild(node);
+    const popup = node.getComponent(kind) || node.addComponent(kind);
+    popup.init(this.frames);
+    popup.show(opts);
+    this.popup = popup;
+    return popup;
+  },
+
+  _closePopup() {
+    if (this.popup && this.popup.isShowing()) {
+      this.popup.hide();
+    }
+    this.popup = null;
   },
 
   /** Loads every sprite frame under resources/textures once and indexes them by file name. */
@@ -174,8 +266,7 @@ cc.Class({
       frames.forEach((f) => {
         this.frames[f.name] = f;
       });
-      this.backgroundSprite.spriteFrame = this.frames.Background;
-      this._layoutBackground();
+      this._applyBackgroundFrame(this.frames);
       this._loadPieceStyle(done);
     });
   },
@@ -226,11 +317,9 @@ cc.Class({
   },
 
   _showLevelComplete() {
-    this.popup.show({
-      title: 'Level completed!',
-      body: '+' + LEVEL_REWARD + ' coins',
-      button: 'Continue',
-      onButton: () => {
+    this._showPopup('PopupLevelComplete', {
+      coins: LEVEL_REWARD,
+      onContinue: () => {
         this.totalCoins += LEVEL_REWARD;
         this.hud.setCoins(this.totalCoins);
         this.loadLevel(this.levelIndex + 1);
@@ -239,10 +328,6 @@ cc.Class({
   },
 
   _showSettings() {
-    this.popup.show({
-      title: 'Settings',
-      body: 'Sound settings coming soon.',
-      button: 'Close',
-    });
+    this._showPopup('PopupSettings', {});
   },
 });

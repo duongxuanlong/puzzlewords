@@ -10,7 +10,9 @@
  * HideInHierarchy, so they never reach the scene file or the game. Adding the component to an
  * empty node also sets the node up: `populate` sizes it to the design resolution, stretches it
  * to the Canvas, and creates (or adopts, by name) one child per slot at the data/Layout defaults.
- * Those children are ordinary nodes that the scene saves; tune them freely afterwards.
+ * Those children are ordinary nodes that the scene saves; tune them freely afterwards. In the
+ * editor it then puts Hud and FoundWordsPanel on their slots, so adding this one component shows
+ * the whole screen (ADR-0007). Popups are not in the scene: Game instantiates them on demand.
  */
 const { WORD_COLORS } = require('Palette');
 const { LAYOUT } = require('Layout');
@@ -67,7 +69,18 @@ const ScreenLayout = cc.Class({
   onLoad() {
     if (CC_EDITOR) {
       ScreenLayout.populate(this);
+      this._populateComponents();
       this._ensureGizmo();
+    }
+  },
+
+  /** Editor only: the slot components, when missing. */
+  _populateComponents() {
+    if (!this.hud.getComponent('Hud')) {
+      this.hud.addComponent('Hud');
+    }
+    if (!this.panel.getComponent('FoundWordsPanel')) {
+      this.panel.addComponent('FoundWordsPanel');
     }
   },
 
