@@ -49,7 +49,7 @@ The user is a Unity developer new to Cocos: explain Cocos concepts with Unity an
 - Touch: `node.on(cc.Node.EventType.TOUCH_START|TOUCH_MOVE|TOUCH_END|TOUCH_CANCEL, handler, this)`; `event.getLocation()` is world space; `node.convertToNodeSpaceAR(worldPoint)`.
 - Tweens: `cc.tween(node).to(0.2, { position: cc.v3(x, y) }, { easing: 'quadOut' }).call(fn).start()`.
 - Ordering: `node.zIndex`; parent via `node.setParent`/`addChild`. Resources: `cc.resources.load(path, cc.JsonAsset, cb)`.
-- Design resolution 1080x1920. `Game` sets the Canvas to fit width on portrait screens and to fit both axes (letterboxed phone column) on windows wider than 9:16 such as the desktop preview, so the full layout is always visible and never stretched. Use `cc.Widget` for HUD anchoring.
+- Design resolution 1080x1920. `Game` picks the Canvas fit per platform: handhelds (`cc.sys.isMobile`, native, or a multi-touch screen for iPadOS Safari) fill the screen (fit width on portrait, fit height when wider than 9:16, layout stays a centred 1080-wide column, background sized cover-style so it never distorts); desktop browsers fit both axes (SHOW_ALL), a letterboxed portrait phone column with black bars by design (SHOW_ALL clips the viewport, so nothing can paint the bars). Use `cc.Widget` for HUD anchoring.
 - Local API reference: `/Applications/Cocos/Creator/2.4.15/CocosCreator.app/Contents/Resources/engine/cocos2d/` (source) and `.../Resources/engine/api.d.ts`. Prefer these over web docs, which mostly cover 3.x.
 
 ## Roles and skills

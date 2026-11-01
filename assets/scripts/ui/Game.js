@@ -12,6 +12,7 @@ const { EVENTS, LEVEL_REWARD, COINS_PER_WORD } = require('Constants');
 const { LAYOUT } = require('Layout');
 const { TIMING } = require('Timing');
 const { paletteIndex } = require('Palette');
+const PieceStyle = require('PieceStyle');
 
 const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 
@@ -176,16 +177,23 @@ cc.Class({
   },
 
   /**
-   * Loads resources/prefabs/PieceStyle (editor-tunable piece look, see PieceStyle.js). The prefab's
-   * root node is read directly, never instantiated. Missing prefab → component defaults.
+   * Loads resources/prefabs/PieceStyle (label templates for pieces, see PieceStyle.js). The prefab is
+   * instantiated once and kept off-stage; PieceNode clones its child labels. Missing or incomplete
+   * prefab → templates built in code from the data/ constants.
    */
   _loadPieceStyle(done) {
     cc.resources.load('prefabs/PieceStyle', cc.Prefab, (err, prefab) => {
-      const style = err || !prefab.data ? null : prefab.data.getComponent('PieceStyle');
-      if (!style) {
-        cc.warn('Game: PieceStyle prefab missing or without a PieceStyle component; using defaults');
+      let style = null;
+      if (!err && prefab) {
+        this.pieceStyleNode = cc.instantiate(prefab);
+        style = this.pieceStyleNode.getComponent('PieceStyle');
       }
-      this.pieceStyle = style || new cc.Node('pieceStyle').addComponent('PieceStyle');
+      if (!style || !style.isComplete()) {
+        cc.warn('Game: PieceStyle prefab missing or its label templates unassigned; using code defaults');
+        style = PieceStyle.createDefault();
+        this.pieceStyleNode = style.node;
+      }
+      this.pieceStyle = style;
       done();
     });
   },

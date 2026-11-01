@@ -34,7 +34,7 @@ cc.Class({
    * @param {object} frames sprite frames by texture name
    * @param {string} badgeText word length shown on a pinned letter ('' for free pieces)
    * @param {number|null} pinColor palette index of the pinned word (null for free pieces)
-   * @param {PieceStyle} style editor-tunable look (badge size, offset, colour)
+   * @param {PieceStyle} style label templates from resources/prefabs/PieceStyle (letter, badge, counter)
    */
   init(piece, cellSize, frames, badgeText, pinColor, style) {
     this.piece = piece;
@@ -74,7 +74,7 @@ cc.Class({
     }
     this.tint = target;
     const blockColor = target === null ? rgb(UI.WHITE) : rgb(wordColor(target));
-    const letterColor = target === null ? rgb(UI.LETTER) : rgb(UI.LETTER_ON_COLOR);
+    const letterColor = target === null ? this.style.letter.color : this.style.letterColorOnTint;
     const apply = (node, color) => {
       cc.Tween.stopAllByTarget(node);
       if (immediate) {
@@ -216,35 +216,40 @@ cc.Class({
     return node;
   },
 
-  _addLabel(name, text, fontSize, color) {
-    const node = new cc.Node(name);
-    const label = node.addComponent(cc.Label);
+  /**
+   * Clones a label template from the PieceStyle prefab. The template is authored at LAYOUT.MAX_CELL,
+   * so font size and position scale by cellSize / MAX_CELL; text and visibility are set here.
+   */
+  _cloneLabel(template, name, text) {
+    const k = this.cellSize / LAYOUT.MAX_CELL;
+    const source = template.getComponent(cc.Label);
+    const node = cc.instantiate(template);
+    node.name = name;
+    node.active = true;
+    const label = node.getComponent(cc.Label);
     label.string = text;
-    label.fontSize = fontSize;
-    label.lineHeight = fontSize;
-    label.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
-    label.verticalAlign = cc.Label.VerticalAlign.CENTER;
-    label.cacheMode = cc.Label.CacheMode.BITMAP; // static text: packs into the dynamic atlas so pieces batch
-    node.color = color;
+    label.fontSize = Math.round(source.fontSize * k);
+    label.lineHeight = Math.round(source.lineHeight * k);
+    node.setPosition(template.x * k, template.y * k);
     this.node.addChild(node);
     return node;
   },
 
   _addLetter(letter, offset) {
-    const node = this._addLabel('letter', letter, Math.round(this.cellSize * LAYOUT.LETTER_SIZE), rgb(UI.LETTER));
-    node.position = this._offsetToLocal(offset);
+    const node = this._cloneLabel(this.style.letter, 'letter', letter);
+    const centre = this._offsetToLocal(offset);
+    node.setPosition(node.x + centre.x, node.y + centre.y);
     return node;
   },
 
   _addBadge(offset, text) {
-    const { badgeSize, badgeOffset, badgeColor } = this.style;
-    const node = this._addLabel('badge', text, Math.round(this.cellSize * badgeSize), badgeColor);
+    const node = this._cloneLabel(this.style.badge, 'badge', text);
     const centre = this._offsetToLocal(offset);
-    node.position = cc.v2(centre.x + this.cellSize * badgeOffset, centre.y - this.cellSize * badgeOffset);
+    node.setPosition(node.x + centre.x, node.y + centre.y);
     return node;
   },
 
   _addCounter() {
-    return this._addLabel('counter', String(this.piece.frozen), Math.round(this.cellSize * LAYOUT.COUNTER_SIZE), rgb(UI.ICE_COUNTER));
+    return this._cloneLabel(this.style.counter, 'counter', String(this.piece.frozen));
   },
 });
