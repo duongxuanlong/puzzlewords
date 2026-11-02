@@ -6,8 +6,8 @@
  * and the settings stub. Coins accumulate across levels for the session (persistence is M2).
  * The screen geometry is the ScreenLayout in Main.fire (slot nodes referenced from a component,
  * ADR-0006; ScreenSlots builds a default when the scene has none). Each slot may already carry
- * its component from the editor (ADR-0007: Hud, FoundWordsPanel, BoardView authored in the scene);
- * Game adopts what it finds and adds what is missing. Popups are instantiated on demand from one
+ * its component from the editor (ADR-0007: Hud, FoundWordsPanel, BoardView and DragController are
+ * authored in the scene); Game adopts what it finds and adds what is missing (bare-scene fallback). Popups are instantiated on demand from one
  * prefab per kind (resources/prefabs/PopupLevelComplete, PopupSettings) into the `popup` slot.
  * The background is a referenced node too, created by `populate` when the component is added. Tunables come from the GameConfig component on the
  * Canvas when the scene has one, else from data/Layout (see GameConfig.js).
