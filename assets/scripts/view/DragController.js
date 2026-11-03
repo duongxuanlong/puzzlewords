@@ -3,7 +3,7 @@
  * Lives on the BoardView node. The piece never floats under the finger: on every move the finger
  * is mapped to a target cell, the session's BFS gives a route through free cells, and the piece is
  * stepped there one cell at a time (session.dragStep commits each step, then the node tweens).
- * Release waits for the step queue to drain, then session.endDrag and BoardView.afterDrop.
+ * Release drops the queued route, lets the step in flight finish, then session.endDrag and BoardView.afterDrop.
  * Depends on BoardView (geometry, piece nodes) and GameSession (beginDrag/dragStep/endDrag/findPath).
  */
 const { TIMING } = require('Timing');
@@ -137,6 +137,9 @@ cc.Class({
   _release() {
     const drag = this.active;
     drag.released = true;
+    // Drop where the piece is: only the step already in flight completes. Without this a fast drag
+    // left a long queued route and the piece kept sliding on its own after the finger was gone.
+    drag.queue = [];
     this.unschedule(this._onTimeout);
     if (!drag.stepping) {
       this._finish();
