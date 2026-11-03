@@ -1,0 +1,84 @@
+{
+  "id": 7,
+  "topic": "KITCHEN",
+  "words": [
+    "FORK",
+    "SPOON"
+  ],
+  "colors": [
+    2,
+    1
+  ],
+  "shape": [
+    "#####",
+    "#####",
+    "#####"
+  ],
+  "pieces": [
+    {
+      "letters": "F",
+      "at": [
+        0,
+        0
+      ],
+      "pin": 0
+    },
+    {
+      "letters": "O",
+      "at": [
+        0,
+        2
+      ]
+    },
+    {
+      "letters": "R",
+      "at": [
+        2,
+        4
+      ]
+    },
+    {
+      "letters": "K",
+      "at": [
+        0,
+        1
+      ]
+    },
+    {
+      "letters": "S",
+      "at": [
+        2,
+        0
+      ],
+      "pin": 1
+    },
+    {
+      "letters": "P",
+      "at": [
+        1,
+        4
+      ]
+    },
+    {
+      "letters": "O",
+      "at": [
+        1,
+        1
+      ]
+    },
+    {
+      "letters": "O",
+      "at": [
+        2,
+        2
+      ]
+    },
+    {
+      "letters": "N",
+      "at": [
+        1,
+        2
+      ]
+    }
+  ]
+}

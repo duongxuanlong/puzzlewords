@@ -2,7 +2,9 @@
   "title": "puzzlewords",
   "packageName": "org.cocos2d.demo",
   "startScene": "8148f677-13cb-4014-be14-a87c88292053",
-  "excludeScenes": [],
+  "excludeScenes": [
+    "a6c0f7cc-d51e-4b95-81b8-455e226302e8"
+  ],
   "orientation": {
     "landscapeRight": true,
     "landscapeLeft": true,
