@@ -11,19 +11,22 @@
  * prefab per kind (resources/prefabs/PopupLevelComplete, PopupSettings) into the `popup` slot.
  * The background is a referenced node too, created by `populate` when the component is added. Tunables come from the GameConfig component on the
  * Canvas when the scene has one, else from data/Layout (see GameConfig.js).
- * Depends on systems/GameSession, systems/EventBus, data/Constants, data/Layout, data/Timing.
+ * While the level editor has handed over a draft (systems/LevelDraft, ADR-0008) that draft is
+ * played instead of the resources list, and Continue / the settings button lead back to the editor.
+ * Depends on systems/GameSession, systems/EventBus, systems/LevelDraft, ui/GameAssets,
+ * data/Constants, data/Layout, data/Timing.
  */
 const GameSession = require('GameSession');
 const EventBus = require('EventBus');
+const LevelDraft = require('LevelDraft');
 const { EVENTS, LEVEL_REWARD, COINS_PER_WORD } = require('Constants');
 const { LAYOUT } = require('Layout');
 const { TIMING } = require('Timing');
 const { paletteIndex } = require('Palette');
-const PieceStyle = require('PieceStyle');
+const GameAssets = require('GameAssets');
 const GameConfig = require('GameConfig');
 const ScreenSlots = require('ScreenSlots');
 
-const LEVEL_IDS = ['level_001', 'level_002', 'level_003', 'level_004'];
 const POPUP_KINDS = ['PopupLevelComplete', 'PopupSettings'];
 
 /**
@@ -82,29 +85,52 @@ cc.Class({
     this._buildBoard();
     this._loadFrames(() => {
       this._loadPopupPrefabs(() => {
-        this._buildUi();
-        this.loadLevel(this.levelIndex);
+        GameAssets.loadLevels((levels) => {
+          if (!cc.isValid(this)) {
+            return; // the scene changed while assets were loading (e.g. straight into the editor)
+          }
+          this.levels = levels;
+          this._buildUi();
+          this.loadLevel(this.levelIndex);
+        });
       });
     });
   },
 
-  /** Loads and shows level `index` of LEVEL_IDS (wraps around). */
+  /**
+   * Shows level `index` of the levels found under resources/levels, sorted by id (wraps around).
+   * While the level editor has handed over a draft (systems/LevelDraft, ADR-0008) the draft is
+   * shown instead, whatever the index.
+   */
   loadLevel(index) {
-    this.levelIndex = ((index % LEVEL_IDS.length) + LEVEL_IDS.length) % LEVEL_IDS.length;
     this._levelComplete = false;
     this._closePopup();
-    cc.resources.load('levels/' + LEVEL_IDS[this.levelIndex], cc.JsonAsset, (err, asset) => {
-      if (err) {
-        cc.error('Game: failed to load level ' + LEVEL_IDS[this.levelIndex], err);
-        return;
-      }
-      const level = asset.json;
-      this.session.load(level);
-      this.hud.setLevel(level.id);
-      this.panel.setTopic(level.topic, level.words);
-      this.boardView.bind(this.session, this.frames, this.pieceStyle);
-      this.boardView.setFlyTarget(this.panel.slotWorldPos());
-    });
+    if (LevelDraft.has()) {
+      this._showLevel(LevelDraft.peek());
+      return;
+    }
+    const count = this.levels.length;
+    if (!count) {
+      cc.error('Game: no levels under resources/levels');
+      return;
+    }
+    this.levelIndex = ((index % count) + count) % count;
+    this._showLevel(this.levels[this.levelIndex]);
+  },
+
+  _showLevel(level) {
+    this.session.load(level);
+    this.hud.setLevel(level.id);
+    this.panel.setTopic(level.topic, level.words);
+    this.boardView.bind(this.session, this.frames, this.pieceStyle);
+    this.boardView.setFlyTarget(this.panel.slotWorldPos());
+  },
+
+  /** Test play of an editor draft: back to the editor scene, which still holds the document. */
+  _returnToEditor() {
+    const scene = LevelDraft.returnTo();
+    LevelDraft.clear();
+    cc.director.loadScene(scene);
   },
 
   restart() {
@@ -203,7 +229,8 @@ cc.Class({
     this.hud = hudSlot.getComponent('Hud') || hudSlot.addComponent('Hud');
     this.hud.init(this.frames);
     this.hud.onRestart(() => this.restart());
-    this.hud.onSettings(() => this._showSettings());
+    // Playing an editor draft: the settings button is the way back to the editor.
+    this.hud.onSettings(() => (LevelDraft.has() ? this._returnToEditor() : this._showSettings()));
 
     const panelSlot = this.screen.panel;
     this.panel = panelSlot.getComponent('FoundWordsPanel') || panelSlot.addComponent('FoundWordsPanel');
@@ -255,41 +282,19 @@ cc.Class({
     this.popup = null;
   },
 
-  /** Loads every sprite frame under resources/textures once and indexes them by file name. */
+  /** Sprite frames by texture name, then the PieceStyle (see ui/GameAssets). */
   _loadFrames(done) {
-    cc.resources.loadDir('textures', cc.SpriteFrame, (err, frames) => {
-      if (err) {
-        cc.error('Game: failed to load textures', err);
+    GameAssets.loadFrames((frames) => {
+      if (!frames) {
         return;
       }
-      this.frames = {};
-      frames.forEach((f) => {
-        this.frames[f.name] = f;
-      });
+      this.frames = frames;
       this._applyBackgroundFrame(this.frames);
-      this._loadPieceStyle(done);
-    });
-  },
-
-  /**
-   * Loads resources/prefabs/PieceStyle (label templates for pieces, see PieceStyle.js). The prefab is
-   * instantiated once and kept off-stage; PieceNode clones its child labels. Missing or incomplete
-   * prefab → templates built in code from the data/ constants.
-   */
-  _loadPieceStyle(done) {
-    cc.resources.load('prefabs/PieceStyle', cc.Prefab, (err, prefab) => {
-      let style = null;
-      if (!err && prefab) {
-        this.pieceStyleNode = cc.instantiate(prefab);
-        style = this.pieceStyleNode.getComponent('PieceStyle');
-      }
-      if (!style || !style.isComplete()) {
-        cc.warn('Game: PieceStyle prefab missing or its label templates unassigned; using code defaults');
-        style = PieceStyle.createDefault();
-        this.pieceStyleNode = style.node;
-      }
-      this.pieceStyle = style;
-      done();
+      GameAssets.loadPieceStyle((style, node) => {
+        this.pieceStyle = style;
+        this.pieceStyleNode = node;
+        done();
+      });
     });
   },
 
@@ -320,6 +325,10 @@ cc.Class({
     this._showPopup('PopupLevelComplete', {
       coins: LEVEL_REWARD,
       onContinue: () => {
+        if (LevelDraft.has()) {
+          this._returnToEditor();
+          return;
+        }
         this.totalCoins += LEVEL_REWARD;
         this.hud.setCoins(this.totalCoins);
         this.loadLevel(this.levelIndex + 1);

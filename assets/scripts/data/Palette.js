@@ -35,6 +35,15 @@ const UI = Object.freeze({
   POPUP_TEXT: Object.freeze([235, 238, 255]), // body text on the dark Panel texture
   BUTTON: Object.freeze([58, 120, 236]),
   BUTTON_TEXT: Object.freeze([255, 255, 255]),
+  // Level editor chrome (ui/LevelEditor, ADR-0008)
+  EDITOR_TEXT: Object.freeze([225, 230, 255]),
+  EDITOR_MUTED: Object.freeze([150, 160, 205]),
+  EDITOR_FIELD: Object.freeze([38, 40, 90]), // EditBox background
+  EDITOR_TOOL: Object.freeze([70, 60, 150]), // inactive tool button
+  EDITOR_OK: Object.freeze([98, 204, 68]),
+  EDITOR_ERROR: Object.freeze([255, 110, 110]),
+  EDITOR_SELECTION: Object.freeze([255, 200, 60]),
+  EDITOR_HOLE: Object.freeze([120, 130, 180]), // outline of a hole cell so it can be tapped back on
 });
 
 /** @returns {number[]} colour for a palette index, cycling past the end */

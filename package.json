@@ -13,7 +13,9 @@
     "build:android": "sh tools/build.sh android",
     "build:ios": "sh tools/build.sh ios",
     "serve:web": "node tools/serve.js build/web-mobile 8080",
-    "gen:outlines": "node tools/gen-outline-textures.js"
+    "gen:outlines": "node tools/gen-outline-textures.js",
+    "gen:editor-scene": "node tools/gen-editor-scene.js",
+    "editor:server": "node tools/level-server.js"
   },
   "engines": {
     "node": ">=20"
