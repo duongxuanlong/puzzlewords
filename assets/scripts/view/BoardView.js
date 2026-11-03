@@ -127,9 +127,10 @@ cc.Class({
 
   // ---- event handlers ----------------------------------------------------------------------------
 
+  /** Tints pieces whose every cell is on a word's prefix chain; a block only half on it stays white. */
   _onProgress({ prefixes }) {
     const tintOf = new Map();
-    prefixes.forEach((p) => p.pieceIds.forEach((id) => {
+    prefixes.forEach((p) => p.coveredPieceIds.forEach((id) => {
       if (!tintOf.has(id)) {
         tintOf.set(id, paletteIndex(this.session.level, p.wordIndex));
       }

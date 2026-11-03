@@ -145,7 +145,12 @@ class GameSession {
       thawed.forEach((pieceId) => this.bus.emit(EVENTS.FREEZE_THAWED, { pieceId }));
     });
     this.bus.emit(EVENTS.WORD_PROGRESS, {
-      prefixes: result.progress.map((m) => ({ wordIndex: m.wordIndex, cells: cellsCopy(m.cells), pieceIds: m.pieceIds.slice() })),
+      prefixes: result.progress.map((m) => ({
+        wordIndex: m.wordIndex,
+        cells: cellsCopy(m.cells),
+        pieceIds: m.pieceIds.slice(),
+        coveredPieceIds: m.coveredPieceIds.slice(),
+      })),
     });
     return result.clears.length;
   }

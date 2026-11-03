@@ -38,7 +38,7 @@ Set `COCOS_CREATOR` to the editor binary if it is installed somewhere other than
 
 ## How to play
 - Drag a letter piece with your finger. It slides one cell at a time through free cells and never passes through other pieces. Multi-cell blocks move as one unit.
-- Each word starts at a pinned letter that never moves and shows the word's length and colour. Build the word as a chain of neighbouring cells from the pin; the longest correct prefix is tinted in the word's colour after every drop.
+- Each word starts at a pinned letter that never moves and shows the word's length and colour. Build the word as a chain of neighbouring cells from the pin; the longest correct prefix is tinted in the word's colour after every drop (a linked block is tinted only when all of its letters are on that prefix).
 - A complete word clears and flies to the found-words panel. Frozen pieces hide their letter under ice with a counter; every cleared word lowers all counters, and at zero the ice melts.
 - Clear every word to finish the level and move to the next one.
 

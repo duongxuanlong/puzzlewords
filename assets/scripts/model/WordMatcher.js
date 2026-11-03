@@ -14,8 +14,11 @@ const Board = require('Board');
  * @param {Board} board
  * @param {{ words: string[] }} level
  * @param {Piece[]} pieces pieces currently on the board
- * @returns {{ wordIndex: number, cells: number[][], pieceIds: string[], complete: boolean }[]}
- *   one result per pinned piece still on the board, in word order
+ * @returns {{ wordIndex: number, cells: number[][], pieceIds: string[], coveredPieceIds: string[], complete: boolean }[]}
+ *   one result per pinned piece still on the board, in word order. `pieceIds` are the pieces the
+ *   chain touches; `coveredPieceIds` only those whose every cell is on the chain, which is what the
+ *   prefix highlight tints (a linked block half on the chain stays untinted so the player does not
+ *   read its other letters as placed).
  */
 function find(board, level, pieces) {
   const byId = new Map(pieces.map((p) => [p.id, p]));
@@ -33,7 +36,12 @@ function find(board, level, pieces) {
           pieceIds.push(id);
         }
       });
-      return { wordIndex: pin.pin, cells, pieceIds, complete: cells.length === word.length };
+      const onChain = new Set(cells.map(([r, c]) => Board.key(r, c)));
+      const coveredPieceIds = pieceIds.filter((id) => {
+        const piece = byId.get(id);
+        return piece.cells(piece.at[0], piece.at[1]).every(([r, c]) => onChain.has(Board.key(r, c)));
+      });
+      return { wordIndex: pin.pin, cells, pieceIds, coveredPieceIds, complete: cells.length === word.length };
     });
 }
 

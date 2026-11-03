@@ -121,6 +121,21 @@ test('reads letters of linked blocks per cell', () => {
   const m = WordMatcher.find(board, { words: ['PINK'] }, [pin, block, k])[0];
   assert.equal(m.complete, true);
   assert.deepEqual(m.pieceIds, ['p', 'in', 'k']);
+  assert.deepEqual(m.coveredPieceIds, ['p', 'in', 'k']);
+});
+
+test('a linked block the chain enters but does not cover is touched, not covered', () => {
+  // Level 15 situation: pinned S with the A-I block above it. S-A is the SAW prefix; the I is not
+  // on the chain, so the block must not be tinted (the player would read S-A-I as a 3-letter clear).
+  const board = new Board(['###', '###']);
+  const pin = new Piece({ id: 's', letters: 'S', at: [1, 0], pin: 0 });
+  const block = new Piece({ id: 'ai', letters: 'AI', offsets: [[0, 0], [0, 1]], at: [0, 0] });
+  [pin, block].forEach((p) => board.place(p, p.at[0], p.at[1]));
+  const m = WordMatcher.find(board, { words: ['SAW'] }, [pin, block])[0];
+  assert.equal(m.complete, false);
+  assert.deepEqual(m.cells, [[1, 0], [0, 0]]);
+  assert.deepEqual(m.pieceIds, ['s', 'ai']);
+  assert.deepEqual(m.coveredPieceIds, ['s']);
 });
 
 test('a dense 6x6 board resolves quickly', () => {

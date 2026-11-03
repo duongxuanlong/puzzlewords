@@ -442,7 +442,8 @@ cc.Class({
     pieces.forEach((p) => board.place(p, p.at[0], p.at[1]));
     this.preview = { bus: new EventBus(), board, pieces, level };
     this.boardView.bind(this.preview, this.frames, this.style);
-    const prefixes = WordMatcher.find(board, level, pieces).map((m) => ({ wordIndex: m.wordIndex, cells: m.cells, pieceIds: m.pieceIds }));
+    const prefixes = WordMatcher.find(board, level, pieces)
+      .map((m) => ({ wordIndex: m.wordIndex, cells: m.cells, pieceIds: m.pieceIds, coveredPieceIds: m.coveredPieceIds }));
     this.preview.bus.emit(EVENTS.WORD_PROGRESS, { prefixes });
     this._drawOverlay();
   },

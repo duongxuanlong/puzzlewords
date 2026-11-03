@@ -19,7 +19,7 @@ Each level shows a topic and a board of letter pieces. The player slides pieces 
 1. Board cells come from `shape`; pieces occupy one to three 4-connected cells.
 2. A drag is a sequence of single-cell steps (up, down, left or right). A step is legal when every cell of the piece's footprint at the new position is inside the board and free (cells the piece itself occupies count as free). The board is updated after every step, so two pieces can never overlap and a piece cannot pass through another.
 3. Pinned pieces and frozen pieces cannot be dragged.
-4. After every legal move, matching runs: for each pinned piece and its word, search for a chain of 4-adjacent occupied, non-frozen cells starting at the pin whose letters spell the word in order. Each step may go up, down, left or right; no cell is reused; pins of other words are not usable. The longest valid prefix chain is reported for highlighting even when the word is incomplete.
+4. After every legal move, matching runs: for each pinned piece and its word, search for a chain of 4-adjacent occupied, non-frozen cells starting at the pin whose letters spell the word in order. Each step may go up, down, left or right; no cell is reused; pins of other words are not usable. The longest valid prefix chain is reported for highlighting even when the word is incomplete. A piece is highlighted only when every one of its cells is on the chain: a linked block that the chain enters but does not cover stays untinted, so its remaining letters are never mistaken for placed ones (a pinned S showing 3 next to an A-I block would otherwise read as a solved SAW).
 5. Matched pieces are removed; cells are freed; the word is added to the found list; coins += 10 per word (placeholder economy).
 6. After each cleared word, every frozen piece's counter decreases by 1; at zero the piece thaws.
 7. Level completes when all words are found.
@@ -41,6 +41,7 @@ Each level shows a topic and a board of letter pieces. The player slides pieces 
 - Given level 1, when N and E are placed right of the pinned O, then "ONE" is added to the panel and the three cells are free.
 - Given level 3, when E is dropped left of the pinned P and A below E, then "PEA" clears (L-shaped chain).
 - Given level 3, when E is dropped left of the pinned P alone, then E is tinted orange and nothing clears.
+- Given level 15, when the A-I block is dropped with its A above the pinned S, then S is tinted and the A-I block stays white, because the I is not on the SAW chain.
 - Given level 3, when PEA clears, then the frozen counter goes 1→0, the ice disappears and I can be dragged.
 - Given level 4, when RED and BLUE are cleared, then the IN block thaws (2→0) and can be dragged as a unit.
 - Given any level, when the finger moves a piece toward a cell blocked by another piece, then the piece stops at the last free cell and never overlaps.

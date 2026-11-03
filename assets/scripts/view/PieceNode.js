@@ -281,7 +281,34 @@ cc.Class({
     return node;
   },
 
+  /**
+   * The freeze counter sits at the centre of an L shape's elbow cell (the only cell whose two
+   * in-piece 4-neighbours are perpendicular). Shapes without exactly one such cell (single cells,
+   * bars, squares, T shapes) keep it at the node centre. The ice sprite is drawn shrunk inside the
+   * cell box (BLOCK_FILL), so the cell is measured in the sprite's own pitch rather than the grid's,
+   * keeping the number centred on the drawn ice cell.
+   */
   _addCounter() {
-    return this._cloneLabel(this.style.counter, 'counter', String(this.piece.frozen));
+    const node = this._cloneLabel(this.style.counter, 'counter', String(this.piece.frozen));
+    const elbow = this._elbowOffset();
+    if (elbow) {
+      const b = this._bounds;
+      const pitchX = this.ice ? this.ice.width / b.width : this.cellSize;
+      const pitchY = this.ice ? this.ice.height / b.height : this.cellSize;
+      node.setPosition(node.x + (elbow[1] - b.centerC) * pitchX, node.y + (b.centerR - elbow[0]) * pitchY);
+    }
+    return node;
+  },
+
+  /** [row, col] offset of the unique elbow cell (two perpendicular in-piece neighbours), or null. */
+  _elbowOffset() {
+    const offsets = this.piece.offsets;
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const has = (r, c) => offsets.some((o) => o[0] === r && o[1] === c);
+    const elbows = offsets.filter((o) => {
+      const n = dirs.filter((d) => has(o[0] + d[0], o[1] + d[1]));
+      return n.length === 2 && (n[0][0] + n[1][0] !== 0 || n[0][1] + n[1][1] !== 0);
+    });
+    return elbows.length === 1 ? elbows[0] : null;
   },
 });
